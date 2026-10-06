@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Secrets: only .env.example is committed
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# Build output and caches
+dist/
+coverage/
+.wrangler/
+.vite/
+
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+*.log

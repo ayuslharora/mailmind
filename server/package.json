@@ -1,0 +1,15 @@
+{
+  "name": "@mailmind/server",
+  "private": true,
+  "type": "module",
+  "description": "Express API: Gmail sync, redaction, classification and RAG.",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=../.env src/index.js",
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@mailmind/core": "*",
+    "express": "^5.2.1"
+  }
+}

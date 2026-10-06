@@ -1,0 +1,12 @@
+{
+  "name": "@mailmind/core",
+  "private": true,
+  "type": "module",
+  "description": "Pure functions shared by the server: redaction, dates and urgency. No I/O.",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}

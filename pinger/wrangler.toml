@@ -1,0 +1,10 @@
+name = "mailmind-pinger"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Every 10 minutes: under Render's 15-minute idle limit, with room for cron jitter.
+[triggers]
+crons = ["*/10 * * * *"]
+
+[vars]
+TARGET_URL = "https://YOUR-RENDER-SERVICE.onrender.com/health"
