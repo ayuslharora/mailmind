@@ -6,12 +6,15 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "check-redaction": "node scripts/check-redaction.js"
   },
   "dependencies": {
     "@mailmind/core": "*",
     "dotenv": "^18.0.6",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "googleapis": "^183.0.0",
+    "html-to-text": "^10.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
