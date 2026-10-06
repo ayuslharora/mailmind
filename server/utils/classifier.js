@@ -17,12 +17,22 @@ const answerSchema = z.object({
   date_kind: z.object({ probs: probabilities(DATE_KINDS) }),
 });
 
+// Temperature 0 for the first try. A retry of the same request at 0 mostly
+// repeats the same mistake (seen live: a list instead of an object), so
+// retries add a little randomness.
+const FIRST_TEMPERATURE = 0;
+const RETRY_TEMPERATURE = 0.3;
+
 // Created on first use, after dotenv has loaded GROQ_API_KEY.
-let model;
-const getModel = () =>
-  (model ??= new ChatGroq({ model: "openai/gpt-oss-20b", temperature: 0, reasoningEffort: "low", maxRetries: 0 })
-    // jsonSchema: Groq guarantees the reply matches the schema.
-    .withStructuredOutput(answerSchema, { method: "jsonSchema", includeRaw: true }));
+const models = new Map();
+const getModel = (temperature) => {
+  if (!models.has(temperature)) {
+    const model = new ChatGroq({ model: "openai/gpt-oss-20b", temperature, reasoningEffort: "low", maxRetries: 0 });
+    // jsonSchema: Groq rejects any reply that does not match the schema.
+    models.set(temperature, model.withStructuredOutput(answerSchema, { method: "jsonSchema", includeRaw: true }));
+  }
+  return models.get(temperature);
+};
 
 // Groq's free tier allows 8,000 tokens a minute; this keeps a margin.
 const TOKENS_PER_MINUTE = 7000;
@@ -61,13 +71,16 @@ async function callModel(state) {
   for (let attempt = 1; ; attempt += 1) {
     await waitForRoom(estimate);
     try {
-      const { parsed, raw } = await getModel().invoke([
+      const temperature = attempt === 1 ? FIRST_TEMPERATURE : RETRY_TEMPERATURE;
+      const { parsed, raw } = await getModel(temperature).invoke([
         ["system", SYSTEM_PROMPT],
         ["human", input],
       ]);
       recentUsage.push({ at: Date.now(), tokens: raw.usage_metadata?.total_tokens ?? estimate });
       return normalizeAnswers(parsed);
     } catch (err) {
+      // A rejected reply was still generated, so it still used tokens.
+      if (statusOf(err) !== 429) recentUsage.push({ at: Date.now(), tokens: estimate });
       if (isDailyLimit(err)) throw new DailyLimitError(err.message);
       if (attempt >= MAX_ATTEMPTS) throw err;
       await sleep(statusOf(err) === 429 ? retryAfterMs(err) : 2000 * attempt);
