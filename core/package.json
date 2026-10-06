@@ -8,5 +8,8 @@
   },
   "scripts": {
     "test": "node --test"
+  },
+  "dependencies": {
+    "chrono-node": "^2.10.2"
   }
 }

@@ -113,7 +113,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 | Unsure, or nothing found | ≥ 0.3 | Strict |
 | Unsure, or nothing found | < 0.3 | **Light:** only secrets hidden; safe content links (with tracking removed), dates, amounts and coupon codes kept |
 
-**Deadlines and events.** When the classifier reports a deadline or event, chrono-node reads the raw text in memory, using the email's sent date as the reference and Indian Standard Time, and picks the date nearest words such as *due, by, last date*. Only the date and its kind are stored.
+**Deadlines and events.** When the classifier reports a deadline or event, chrono-node reads the raw text in memory, using the email's sent date as the reference and Indian Standard Time, and picks the date nearest words such as *due, by, last date* (or *on, at, exam, interview* for events). Dates are read day first (10/11 is 10 November); a date without a time means the end of that day; dates before the email was sent are ignored. Two additions to chrono-node cover "EOD" and "by the 15th". Only the date and its kind are stored.
 
 **Urgency** is never stored. It is computed each time the Today view loads:
 `urgency = max(classifier urgency, date urgency)`, where the date urgency is 4 if under 1 day remains, 3 under 3 days, 2 under 7 days. Missed deadlines stay until the user dismisses them.
@@ -263,7 +263,7 @@ Every screen has loading, empty, success and error states.
 | Probabilities | Same set: how often answers given at 0.8 are actually right | Thresholds chosen from the data, not guessed |
 | Security-email recall | Same set | Close to 100%; every miss reviewed |
 | Promotions | 20 marketing emails written to sound urgent | None appear under "Needs action" |
-| Deadlines and events | 25 threads with dates | ≥ 90% correct |
+| Deadlines and events | 17 unit tests (day-first dates, EOD, "by the 15th", times after dates, scores like 10/11 ignored) plus 25 real threads with dates | ≥ 90% correct |
 | RAG | 20 questions with known answers, including follow-ups | ≥ 80% correct, every answer cited |
 | Authorisation | Automated tests across two users and demo visitors | No cross-user access |
 | Demo inbox | Every fake email carries its correct label | Regression test for the whole pipeline |
