@@ -2,12 +2,16 @@
 // terminal, so you can check it on real email.
 //
 //   npm run check-redaction --workspace server -- --max 20 --query "newer_than:30d"
+//   npm run check-redaction --workspace server -- --max 50 --out redaction-check.txt
 //
-// Nothing is saved and nothing is sent anywhere except Google. Run it in your
+// With --out, the results go to that file (in server/, ignored by git) with
+// full email bodies, and only the sign-in steps and progress are shown here.
+// Nothing else is saved and nothing is sent anywhere except Google. Run it in your
 // own terminal, not through an AI assistant: the output contains your email
 // (redacted, but still your names, subjects and messages).
 
 import dotenv from "dotenv";
+import fs from "fs";
 import http from "http";
 import path from "path";
 import crypto from "crypto";
@@ -36,10 +40,14 @@ const { values: args } = parseArgs({
   options: {
     max: { type: "string", default: "20" },
     query: { type: "string", default: "newer_than:30d -in:spam -in:trash" },
+    out: { type: "string" },
   },
 });
 
+// Long bodies are cut in the terminal, but written in full to a file.
 const BODY_PREVIEW = 1500;
+const outFile = args.out ? fs.createWriteStream(args.out) : null;
+const print = (line = "") => (outFile ? outFile.write(`${line}\n`) : console.log(line));
 
 // Opens a one-off local server on the redirect URI and waits for Google to
 // send the user back with a sign-in code.
@@ -83,10 +91,12 @@ function printEmail(index, total, email, result) {
   }
   const hidden = Object.entries(counts).map(([type, n]) => `${type} ×${n}`);
 
-  console.log(`\n━━━ ${index}/${total}  ${domainOf(email.from)}  ·  ${email.date.toISOString().slice(0, 10)}  ·  ${result.strict ? "STRICT" : "light"}`);
-  console.log(`Subject: ${result.subject}`);
-  console.log(`Hidden:  ${hidden.length ? hidden.join("  ·  ") : "nothing"}`);
-  console.log(indent(shorten(result.body.trim(), BODY_PREVIEW)));
+  const body = result.body.trim();
+
+  print(`\n━━━ ${index}/${total}  ${domainOf(email.from)}  ·  ${email.date.toISOString().slice(0, 10)}  ·  ${result.strict ? "STRICT" : "light"}`);
+  print(`Subject: ${result.subject}`);
+  print(`Hidden:  ${hidden.length ? hidden.join("  ·  ") : "nothing"}`);
+  print(indent(outFile ? body : shorten(body, BODY_PREVIEW)));
 }
 
 const auth = createOAuthClient();
@@ -109,11 +119,17 @@ for (const [i, id] of ids.entries()) {
   const email = await getMessage(auth, id);
   const result = redactEmail(email);
   printEmail(i + 1, ids.length, email, result);
+  if (outFile) process.stdout.write(`\rRead ${i + 1}/${ids.length} emails`);
   if (result.strict) strictCount += 1;
   for (const r of result.redactions) counts[r.type] = (counts[r.type] ?? 0) + 1;
 }
 
-console.log(`\n━━━ ${ids.length} emails, ${strictCount} stored strict`);
-console.log(Object.entries(counts).map(([type, n]) => `${type}: ${n}`).join("  ·  ") || "Nothing hidden");
-console.log("\nLook for: a code, card, Aadhaar, PAN or login link left visible (a leak),");
-console.log("and amounts, dates or coupon codes hidden for no reason (over-redaction).");
+print(`\n━━━ ${ids.length} emails, ${strictCount} stored strict`);
+print(Object.entries(counts).map(([type, n]) => `${type}: ${n}`).join("  ·  ") || "Nothing hidden");
+print("\nLook for: a code, card, Aadhaar, PAN or login link left visible (a leak),");
+print("and amounts, dates or coupon codes hidden for no reason (over-redaction).");
+
+if (outFile) {
+  outFile.end();
+  console.log(`\nSaved to ${path.resolve(args.out)}`);
+}
