@@ -10,7 +10,9 @@ export const createOAuthClient = () =>
     process.env.GOOGLE_REDIRECT_URI,
   );
 
-const decode = (data) => Buffer.from(data, "base64url").toString("utf8");
+// Line endings are normalised to \n: a stray \r breaks multiline regexes and
+// makes terminals overwrite text.
+const decode = (data) => Buffer.from(data, "base64url").toString("utf8").replace(/\r\n?/g, "\n");
 
 const header = (payload, name) =>
   payload.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? "";
