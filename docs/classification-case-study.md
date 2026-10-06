@@ -208,6 +208,8 @@ Probability values shown are from the Jev test in section 3. `source` records wh
 | Questions or categories change | `questionsVersion` increases and only older results are reclassified |
 | A new message arrives while a thread is being classified | The newer message wins: the result records which message it was based on, and a stale result is discarded |
 
+**Classified after storing, not before.** Classification is rate-limited (Groq's free tier: 8,000 tokens a minute), so it cannot keep up with the backfill. Messages are therefore redacted and stored first (light, or strict when the rules find a secret), and classified afterwards, newest thread first. If the classifier then says a thread is a security email (security ≥ 0.3), its messages are read from Gmail again and stored strictly, because the original text is not kept. Tested live on 7 October: a Google security alert stored light (5 links hidden) was re-stored strictly (3 more code-shaped numbers hidden).
+
 Every failure leads to a safer state, never a looser one.
 
 ## 7. Privacy summary

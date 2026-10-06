@@ -293,7 +293,7 @@ Every screen has loading, empty, success and error states.
 | Risk | Mitigation |
 | --- | --- |
 | The probabilities from gpt-oss-20b are its own estimates, not calibrated like a decision model's | Thresholds tuned on the labelled set; the security threshold stays low so mistakes lead to stricter storage |
-| Groq's free tier has per-minute and per-day limits that could slow the 30-day backfill | Requests queued and spread out; backfill is resumable; users can add their own Groq key |
+| Groq's free tier allows 1,000 requests a day and 8,000 tokens a minute (measured 7 October): about 5–6 classifications a minute | One call at a time, throttled under 7,000 tokens a minute; threads (not messages) classified, newest first; OTP emails classified by rules without a call; on the daily limit the rest stay "sorting…" until the next run; users can add their own Groq key |
 | Laya is weak without fine-tuning (published zero-shot accuracy 0.362 on TypeSafe's typed-decisions benchmark, against 0.318 for random and 0.727 for Jev), may be limited to 512 tokens, and is free on Vercel only until 31 October 2026 | Not used in the live pipeline; evaluated only. A fine-tuned, self-hosted Laya is a stretch goal |
 | Vercel AI Gateway requires a card on file, even for free models | Needed for embeddings; added before RAG work starts |
 | Free tiers change (Vercel, Groq, Render, Atlas) | Every model sits behind an interface and can be swapped |

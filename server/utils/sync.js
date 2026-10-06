@@ -3,6 +3,7 @@ import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import { decrypt } from "./crypto.js";
 import { createOAuthClient, getMessage, getProfile, listMessagePage } from "./gmail.js";
+import { classifyPending, updateThreads } from "./classifyThreads.js";
 
 // Last 30 days, without spam and trash. Sent mail is included for context.
 const BACKFILL_QUERY = "newer_than:30d -in:spam -in:trash";
@@ -23,9 +24,10 @@ export function gmailAuthFor(user) {
 }
 
 // Redacts one email and finds its dates. The original text exists only
-// inside this function; what it returns is what gets stored.
-export function toStoredMessage(userId, email) {
-  const result = redactEmail(email);
+// inside this function; what it returns is what gets stored. strict: the
+// classifier said it is a security email.
+export function toStoredMessage(userId, email, { strict = false } = {}) {
+  const result = redactEmail(email, { strict });
   const raw = `${email.subject}\n${email.body}`;
   const deadline = findDate(raw, { sentAt: email.date, kind: "deadline" });
   const event = findDate(raw, { sentAt: email.date, kind: "event" });
@@ -55,14 +57,16 @@ export function toStoredMessage(userId, email) {
   };
 }
 
-// Reads and stores the emails not stored yet. Returns how many were new.
+// Reads and stores the emails not stored yet. Returns their thread IDs.
 async function saveMessages(auth, userId, ids) {
   const stored = await Message.find({ userId, gmailId: { $in: ids } }, "gmailId");
   const storedIds = new Set(stored.map((m) => m.gmailId));
   const newIds = ids.filter((id) => !storedIds.has(id));
 
+  const threadIds = [];
   for (let i = 0; i < newIds.length; i += BATCH_SIZE) {
     const emails = await Promise.all(newIds.slice(i, i + BATCH_SIZE).map((id) => getMessage(auth, id)));
+    threadIds.push(...emails.map((email) => email.threadId));
     await Message.bulkWrite(
       emails.map((email) => ({
         updateOne: {
@@ -73,7 +77,7 @@ async function saveMessages(auth, userId, ids) {
       })),
     );
   }
-  return newIds.length;
+  return threadIds;
 }
 
 // Fetches the last 30 days page by page. Progress is saved after every page,
@@ -97,7 +101,10 @@ export async function backfill(userId) {
     let pageToken = user.sync?.backfillPageToken ?? undefined;
     do {
       const page = await listMessagePage(auth, { query: BACKFILL_QUERY, pageToken, pageSize: PAGE_SIZE });
-      await saveMessages(auth, userId, page.ids);
+      await updateThreads(userId, await saveMessages(auth, userId, page.ids));
+      // Not awaited: classification starts on the newest threads while
+      // older pages are still being fetched.
+      classifyPending(userId);
       pageToken = page.nextPageToken;
       await User.updateOne({ _id: userId }, { "sync.backfillPageToken": pageToken ?? null, "sync.lastError": null });
     } while (pageToken);
