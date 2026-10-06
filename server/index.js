@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import syncRoutes from "./routes/sync.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +54,7 @@ app.use(cookieParser());
 
 app.use("/health", healthRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/sync", syncRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });

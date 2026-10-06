@@ -53,22 +53,23 @@ function bodyText(payload) {
 export async function getProfile(auth) {
   const gmail = google.gmail({ version: "v1", auth });
   const { data } = await gmail.users.getProfile({ userId: "me" });
-  return { email: data.emailAddress, messagesTotal: data.messagesTotal };
+  return { email: data.emailAddress, messagesTotal: data.messagesTotal, historyId: data.historyId };
+}
+
+// One page of message IDs, newest first.
+export async function listMessagePage(auth, { query, pageToken, pageSize = 100 }) {
+  const gmail = google.gmail({ version: "v1", auth });
+  const { data } = await gmail.users.messages.list({ userId: "me", q: query, maxResults: pageSize, pageToken });
+  return { ids: (data.messages ?? []).map((m) => m.id), nextPageToken: data.nextPageToken };
 }
 
 export async function listMessageIds(auth, { query, max }) {
-  const gmail = google.gmail({ version: "v1", auth });
   const ids = [];
   let pageToken;
   do {
-    const res = await gmail.users.messages.list({
-      userId: "me",
-      q: query,
-      maxResults: Math.min(500, max - ids.length),
-      pageToken,
-    });
-    ids.push(...(res.data.messages ?? []).map((m) => m.id));
-    pageToken = res.data.nextPageToken;
+    const page = await listMessagePage(auth, { query, pageToken, pageSize: Math.min(500, max - ids.length) });
+    ids.push(...page.ids);
+    pageToken = page.nextPageToken;
   } while (pageToken && ids.length < max);
   return ids;
 }
@@ -84,5 +85,8 @@ export async function getMessage(auth, id) {
     date: new Date(Number(data.internalDate)),
     subject: header(data.payload, "Subject"),
     body: bodyText(data.payload),
+    // Sent by a mailing tool: one of the signals the promotion rules use.
+    bulkSender:
+      Boolean(header(data.payload, "List-Unsubscribe")) || /bulk|list/i.test(header(data.payload, "Precedence")),
   };
 }
