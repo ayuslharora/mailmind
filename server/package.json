@@ -3,13 +3,18 @@
   "private": true,
   "type": "module",
   "description": "Express API: Gmail sync, redaction, classification and RAG.",
+  "main": "index.js",
   "scripts": {
-    "dev": "node --watch --env-file-if-exists=../.env src/index.js",
-    "start": "node src/index.js",
+    "dev": "nodemon index.js",
+    "start": "node index.js",
     "test": "node --test"
   },
   "dependencies": {
     "@mailmind/core": "*",
+    "dotenv": "^18.0.6",
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

@@ -1,12 +1,12 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
-import { createApp } from "../src/app.js";
+import app from "../app.js";
 
 let server;
 let baseUrl;
 
 before(async () => {
-  server = createApp().listen(0);
+  server = app.listen(0);
   await new Promise((resolve) => server.once("listening", resolve));
   baseUrl = `http://localhost:${server.address().port}`;
 });
@@ -22,7 +22,7 @@ test("GET /health returns ok", async () => {
 test("unknown routes return 404 as JSON", async () => {
   const res = await fetch(`${baseUrl}/nope`);
   assert.equal(res.status, 404);
-  assert.deepEqual(await res.json(), { error: "Not found" });
+  assert.deepEqual(await res.json(), { message: "Not found" });
 });
 
 test("does not reveal Express in headers", async () => {
