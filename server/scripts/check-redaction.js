@@ -3,6 +3,11 @@
 //
 //   npm run check-redaction --workspace server -- --max 20 --query "newer_than:30d"
 //   npm run check-redaction --workspace server -- --max 50 --out redaction-check.txt
+//   npm run check-redaction --workspace server -- --max 20 --original --out redaction-check.txt
+//
+// --original also prints each email before redaction, for comparing. That
+// output contains real secrets (codes, card numbers, login links): keep it on
+// your machine and delete it when done.
 //
 // With --out, the results go to that file (in server/, ignored by git) with
 // full email bodies, and only the sign-in steps and progress are shown here.
@@ -41,6 +46,7 @@ const { values: args } = parseArgs({
     max: { type: "string", default: "20" },
     query: { type: "string", default: "newer_than:30d -in:spam -in:trash" },
     out: { type: "string" },
+    original: { type: "boolean", default: false },
   },
 });
 
@@ -108,6 +114,7 @@ function printEmail(index, total, email, result) {
   const hidden = Object.entries(counts).map(([type, n]) => `${type} ×${n}`);
 
   const body = result.body.trim();
+  const fit = (text) => indent(outFile ? text : shorten(text, BODY_PREVIEW));
 
   print(`\n━━━ ${index}/${total}  ${domainOf(email.from)}  ·  ${email.date.toISOString().slice(0, 10)}  ·  ${result.strict ? "STRICT" : "light"}`);
   print(`Subject: ${result.subject}`);
@@ -115,7 +122,12 @@ function printEmail(index, total, email, result) {
   const dates = datesOf(email);
   print(`Dates:   deadline → ${dates.deadline}  ·  event → ${dates.event}`);
   if (dates.deadline !== "none" || dates.event !== "none") datedCount += 1;
-  print(indent(outFile ? body : shorten(body, BODY_PREVIEW)));
+  if (args.original) {
+    print(`\n  ── ORIGINAL ──  Subject: ${email.subject}`);
+    print(fit(email.body.trim()));
+    print("\n  ── REDACTED ──");
+  }
+  print(fit(body));
 }
 
 const auth = createOAuthClient();
