@@ -163,6 +163,25 @@ function findCodes(text, from = 0, to = text.length) {
   return spans;
 }
 
+// Coupon codes are kept so they can be found later ("my Swiggy coupon"), but
+// only when nothing suggests a login code: never in an OTP email, only in
+// capitals starting with three letters (SAVE50, not K7P9QX or 482913), next to
+// a coupon word, and with no login or verification words nearby.
+const COUPON_SHAPE = /^[A-Z]{3,}[A-Z0-9]*$/;
+const COUPON_MAX_DIGITS = 4;
+const COUPON_WORDS = /\b(?:coupons?|promo|discount|vouchers?|offers?|cashback|off)\b/i;
+const NOT_NEAR_COUPON =
+  /\b(?:o\.?t\.?p|verify|verification|log[\s-]?in|sign[\s-]?in|passwords?|passcode|pins?|token|key|auth\w*)\b/i;
+const COUPON_WINDOW = 60;
+
+function isCoupon(text, span) {
+  const code = text.slice(span.start, span.end);
+  const digits = code.replace(/\D/g, "").length;
+  if (!COUPON_SHAPE.test(code) || digits > COUPON_MAX_DIGITS) return false;
+  const nearby = text.slice(Math.max(0, span.start - COUPON_WINDOW), span.end + COUPON_WINDOW);
+  return COUPON_WORDS.test(nearby) && !NOT_NEAR_COUPON.test(nearby);
+}
+
 function findOtps(text, otpEmail) {
   if (otpEmail) return findCodes(text);
   const spans = [];
@@ -171,7 +190,7 @@ function findOtps(text, otpEmail) {
     const to = Math.min(text.length, match.index + match[0].length + WINDOW_AFTER);
     spans.push(...findCodes(text, from, to));
   }
-  return spans;
+  return spans.filter((span) => !isCoupon(text, span));
 }
 
 // Keeps the earliest span, and the longest when two start together, so a
