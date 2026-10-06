@@ -17,7 +17,7 @@ import path from "path";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { parseArgs } from "util";
-import { redactEmail } from "@mailmind/core";
+import { findDate, redactEmail } from "@mailmind/core";
 import { createOAuthClient, getMessage, getProfile, GMAIL_SCOPES, listMessageIds } from "../utils/gmail.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -84,6 +84,22 @@ const shorten = (text, max) => (text.length > max ? `${text.slice(0, max)}…` :
 
 // Shows only what kind of thing was hidden and how many, never the value, so
 // the output can be shared without sharing the secrets.
+// The classifier will say whether an email has a deadline or an event; until
+// it exists, both readings are shown. Dates are found on the raw text, as in
+// the real pipeline, but only the date is printed.
+function datesOf(email) {
+  const text = `${email.subject}\n${email.body}`;
+  const format = (found) =>
+    found
+      ? found.dueAt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" }) +
+        (found.hasTime ? "" : " (end of day)")
+      : "none";
+  return {
+    deadline: format(findDate(text, { sentAt: email.date, kind: "deadline" })),
+    event: format(findDate(text, { sentAt: email.date, kind: "event" })),
+  };
+}
+
 function printEmail(index, total, email, result) {
   const counts = {};
   for (const r of result.redactions) {
@@ -96,6 +112,9 @@ function printEmail(index, total, email, result) {
   print(`\n━━━ ${index}/${total}  ${domainOf(email.from)}  ·  ${email.date.toISOString().slice(0, 10)}  ·  ${result.strict ? "STRICT" : "light"}`);
   print(`Subject: ${result.subject}`);
   print(`Hidden:  ${hidden.length ? hidden.join("  ·  ") : "nothing"}`);
+  const dates = datesOf(email);
+  print(`Dates:   deadline → ${dates.deadline}  ·  event → ${dates.event}`);
+  if (dates.deadline !== "none" || dates.event !== "none") datedCount += 1;
   print(indent(outFile ? body : shorten(body, BODY_PREVIEW)));
 }
 
@@ -114,6 +133,7 @@ if (ids.length === 0) {
 }
 const counts = {};
 let strictCount = 0;
+let datedCount = 0;
 
 for (const [i, id] of ids.entries()) {
   const email = await getMessage(auth, id);
@@ -124,10 +144,11 @@ for (const [i, id] of ids.entries()) {
   for (const r of result.redactions) counts[r.type] = (counts[r.type] ?? 0) + 1;
 }
 
-print(`\n━━━ ${ids.length} emails, ${strictCount} stored strict`);
+print(`\n━━━ ${ids.length} emails, ${strictCount} stored strict, ${datedCount} with a date found`);
 print(Object.entries(counts).map(([type, n]) => `${type}: ${n}`).join("  ·  ") || "Nothing hidden");
 print("\nLook for: a code, card, Aadhaar, PAN or login link left visible (a leak),");
 print("and amounts, dates or coupon codes hidden for no reason (over-redaction).");
+print("For dates: a real deadline or event missed, a wrong date, or a date found in an email that has none.");
 
 if (outFile) {
   outFile.end();
