@@ -257,7 +257,7 @@ Every screen has loading, empty, success and error states.
 
 | What | How | Target |
 | --- | --- | --- |
-| Redaction | Unit tests (124 passing, including 33 adversarial cases) plus real security emails from the author's inbox | No secret reaches any AI request |
+| Redaction | Unit tests (129 passing, including 33 adversarial cases) plus real security emails from the author's inbox | No secret reaches any AI request |
 | Classification | 100 hand-labelled real threads; gpt-oss-20b vs Laya vs Jev (if available) vs fine-tuned Laya (stretch) | ≥ 85% category accuracy; accuracy, speed and cost compared |
 | Probabilities | Same set: how often answers given at 0.8 are actually right | Thresholds chosen from the data, not guessed |
 | Security-email recall | Same set | Close to 100%; every miss reviewed |

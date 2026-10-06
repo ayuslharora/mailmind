@@ -125,12 +125,12 @@ function safeContentLink(url) {
   return `https://${host}${path}`;
 }
 
-function findLinks(text, otpEmail) {
+function findLinks(text, strict) {
   const spans = [];
   for (const pattern of LINK_PATTERNS) {
     for (const match of text.matchAll(pattern)) {
       const url = match[0].replace(TRAILING_PUNCTUATION, "");
-      const kept = otpEmail ? null : safeContentLink(url);
+      const kept = strict ? null : safeContentLink(url);
       let end = match.index + url.length;
       if (!kept && url === match[0]) {
         const tail = text.slice(end).match(WRAPPED_URL_TAIL);
@@ -182,8 +182,8 @@ function isCoupon(text, span) {
   return COUPON_WORDS.test(nearby) && !NOT_NEAR_COUPON.test(nearby);
 }
 
-function findOtps(text, otpEmail) {
-  if (otpEmail) return findCodes(text);
+function findOtps(text, strict) {
+  if (strict) return findCodes(text);
   const spans = [];
   for (const match of text.matchAll(WEAK_OTP_WORDS)) {
     const from = Math.max(0, match.index - WINDOW_BEFORE);
@@ -209,13 +209,15 @@ export function isOtpEmail(text) {
   return STRONG_OTP_WORDS.test(normaliseDigits(text));
 }
 
-export function redactText(text, { otpEmail = isOtpEmail(text) } = {}) {
+// Strict mode hides every code-shaped number and every link. It is the
+// default for OTP emails.
+export function redactText(text, { strict = isOtpEmail(text) } = {}) {
   const normalised = normaliseDigits(text);
   const identifiers = findIdentifiers(normalised);
-  const otps = findOtps(normalised, otpEmail);
+  const otps = findOtps(normalised, strict);
   // In an OTP email, "one-time password is 48291375" is an OTP, not a password.
-  const ordered = otpEmail ? [...otps, ...identifiers] : [...identifiers, ...otps];
-  const spans = removeOverlaps([...findLinks(normalised, otpEmail), ...ordered]);
+  const ordered = strict ? [...otps, ...identifiers] : [...identifiers, ...otps];
+  const spans = removeOverlaps([...findLinks(normalised, strict), ...ordered]);
   let output = "";
   let cursor = 0;
   for (const span of spans) {
@@ -226,16 +228,14 @@ export function redactText(text, { otpEmail = isOtpEmail(text) } = {}) {
   return {
     text: output,
     redactions: spans.map(({ type, start, end }) => ({ type, start, end })),
-    // The rules are sure this text held a secret, so it is stored in strict mode.
-    secretFound: otpEmail || spans.some((span) => SECRET_TYPES.has(span.type)),
+    // The rules are sure this text held a secret.
+    secretFound: isOtpEmail(normalised) || spans.some((span) => SECRET_TYPES.has(span.type)),
   };
 }
 
-// A strong OTP word in either the subject or the body marks the whole email.
-export function redactEmail({ subject = "", body = "" }) {
-  const otpEmail = isOtpEmail(subject) || isOtpEmail(body);
-  const redactedSubject = redactText(subject, { otpEmail });
-  const redactedBody = redactText(body, { otpEmail });
+function redactBoth(subject, body, strict) {
+  const redactedSubject = redactText(subject, { strict });
+  const redactedBody = redactText(body, { strict });
   return {
     subject: redactedSubject.text,
     body: redactedBody.text,
@@ -245,4 +245,18 @@ export function redactEmail({ subject = "", body = "" }) {
       ...redactedBody.redactions.map((r) => ({ ...r, field: "body" })),
     ],
   };
+}
+
+// The whole email is strict when the caller asks for it (the classifier says
+// it is a security email), when the subject or body is an OTP email, or when
+// any secret is found. Otherwise only the secrets themselves are hidden.
+export function redactEmail({ subject = "", body = "" }, { strict = false } = {}) {
+  if (strict || isOtpEmail(subject) || isOtpEmail(body)) {
+    return { ...redactBoth(subject, body, true), strict: true };
+  }
+  const light = redactBoth(subject, body, false);
+  if (!light.secretFound) return { ...light, strict: false };
+  // A secret was found: redact again, strictly. secretFound stays true even if
+  // the strict pass labels the secret differently (an account number as [OTP]).
+  return { ...redactBoth(subject, body, true), secretFound: true, strict: true };
 }
