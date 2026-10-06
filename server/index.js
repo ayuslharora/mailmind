@@ -1,10 +1,12 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 
 import healthRoutes from "./routes/health.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,7 +17,15 @@ dotenv.config({
   quiet: true,
 });
 
-const requiredEnvVars = ["MONGODB_URI"];
+const requiredEnvVars = [
+  "MONGODB_URI",
+  "JWT_SECRET",
+  "ENCRYPTION_KEY",
+  "CLIENT_ORIGIN",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "GOOGLE_REDIRECT_URI",
+];
 
 const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
 
@@ -39,8 +49,10 @@ mongoose
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "100kb" }));
+app.use(cookieParser());
 
 app.use("/health", healthRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });

@@ -181,7 +181,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 | `express` | HTTP API |
 | `mongoose` | MongoDB models; `$vectorSearch` aggregation |
 | `googleapis` | Google sign-in and Gmail API (read-only) |
-| `express-session`, `connect-mongo` | httpOnly session cookies stored in MongoDB |
+| `jsonwebtoken`, `cookie-parser` | Login as a signed JWT in an httpOnly cookie (the course repository's pattern) |
 | `helmet`, `cors`, `express-rate-limit` | Security headers, allowed origins, rate limiting (demo and Ask) |
 | `zod` | Request validation and structured-output schemas |
 | `dotenv` | Environment variables in local development |
@@ -216,14 +216,13 @@ The full reasoning is in `docs/classification-case-study.md`.
 
 | Collection | Key fields |
 | --- | --- |
-| `users` | googleId, email, encryptedRefreshToken, encryptedApiKeys {groq, jev}, settings, isDemo, expiresAt (demo users) |
+| `users` | googleId, email, encryptedRefreshToken, sync {historyId, backfillPageToken, backfillDone, lastSyncedAt, lastError}, encryptedApiKeys {groq, jev}, settings, isDemo, expiresAt (demo users) |
 | `threads` | userId, threadId, latestMessageId, classification {category, categoryP, securityP, needsActionP, urgencyModel, dateKind, source, questionsVersion}, tier, dueAt, state (open/done/snoozed/dismissed), snoozeUntil |
 | `messages` | userId, gmailId, threadId, from, fromMe, date, subject, storedText (light or strict), gmailCategory, bulkSender |
 | `redactions` | messageId, type, detector, position (the secret itself is never stored) |
 | `sender_rules` | userId, sender or domain, rule (category override, always/never show) |
 | `chunks` | userId, messageId, text, embedding, embeddingModel, date, from, category |
 | `conversations` | userId, messages [{role, text, citations}], updatedAt |
-| `sync_state` | userId, historyId, backfillPageToken, lastSyncedAt, lastError |
 
 ## 13. Security and privacy
 
