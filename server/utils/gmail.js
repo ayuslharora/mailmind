@@ -40,6 +40,12 @@ function bodyText(payload) {
   });
 }
 
+export async function getProfile(auth) {
+  const gmail = google.gmail({ version: "v1", auth });
+  const { data } = await gmail.users.getProfile({ userId: "me" });
+  return { email: data.emailAddress, messagesTotal: data.messagesTotal };
+}
+
 export async function listMessageIds(auth, { query, max }) {
   const gmail = google.gmail({ version: "v1", auth });
   const ids = [];

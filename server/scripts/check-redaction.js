@@ -13,7 +13,7 @@ import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { parseArgs } from "util";
 import { redactEmail } from "@mailmind/core";
-import { createOAuthClient, getMessage, GMAIL_SCOPES, listMessageIds } from "../utils/gmail.js";
+import { createOAuthClient, getMessage, getProfile, GMAIL_SCOPES, listMessageIds } from "../utils/gmail.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,7 +90,14 @@ const code = await signInWithBrowser(auth);
 const { tokens } = await auth.getToken(code);
 auth.setCredentials(tokens);
 
+const profile = await getProfile(auth);
+console.log(`Signed in as ${profile.email} (${profile.messagesTotal} messages in the mailbox)`);
+console.log(`Search: "${args.query}", up to ${args.max} emails`);
+
 const ids = await listMessageIds(auth, { query: args.query, max: Number(args.max) });
+if (ids.length === 0) {
+  console.log('\nNo emails matched. Try a wider search, for example --query "newer_than:1y" or --query ""');
+}
 const counts = {};
 let strictCount = 0;
 
