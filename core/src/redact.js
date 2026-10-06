@@ -1,7 +1,10 @@
-// Removes links and one-time codes before email text leaves the API server.
+// Removes links, one-time codes and identifiers (cards, Aadhaar, PAN, account
+// numbers, PINs, passwords) before email text leaves the API server.
 //
 // It errs on the side of over-redaction: a number removed by mistake only
 // lowers classification quality, while a missed code can leak a secret.
+
+import { findIdentifiers, SECRET_TYPES } from "./identifiers.js";
 
 // Words that only appear in emails that carry a one-time code. If any of them
 // is in the subject or body, every code-shaped token in the email is redacted.
@@ -10,17 +13,22 @@ const STRONG_OTP_WORDS =
   /\bo\.?t\.?p\b|\bone[\s-]?time\s+(?:password|passcode|pass|pin|code)\b|\bpasscode\b|\b(?:verification|security|log[\s-]?in|sign[\s-]?in|auth(?:entication)?|access|confirmation)\s+(?:code|key|number)\b|\b2fa\b|\btwo[\s-]?(?:factor|step)\b|\bmfa\b|ओटीपी|पासकोड/i;
 
 // Words that sometimes sit next to a code. Only tokens near them are redacted.
+// "PIN code" is the Indian postal code, so neither word counts there.
 const WEAK_OTP_WORDS =
-  /\b(?:codes?|pins?|verify|verification|token|passwords?|log[\s-]?in|sign[\s-]?in|key)\b|पासवर्ड|कोड/gi;
+  /\b(?:(?<!\bpin\s*-?\s*)codes?|pins?(?!\s*-?\s*code)|verify|verification|token|passwords?|log[\s-]?in|sign[\s-]?in|key)\b|पासवर्ड|कोड/gi;
 const WINDOW_BEFORE = 80;
 const WINDOW_AFTER = 120;
 
 const NUMBER_WORD = "(?:(?:double|triple)[\\s-]+)?(?:zero|oh|one|two|three|four|five|six|seven|eight|nine)";
 const DIGIT_SEPARATOR = "(?:[.-]| {1,3}|\\t)?";
 
+// A number written after a currency is money, never a code. Without this,
+// "Never share your OTP" in a bank alert would hide every amount.
+const NOT_AFTER_CURRENCY = "(?<!(?:\\b(?:rs|inr|usd)|₹|\\$)\\.?\\s*)";
+
 const CODE_PATTERNS = [
   // 4–10 digits, optionally split: 482913, 482 913, 482.913, 4  8  2  9
-  new RegExp(`(?<![\\w-])\\d(?:${DIGIT_SEPARATOR}\\d){3,9}(?![\\w-])`, "g"),
+  new RegExp(`${NOT_AFTER_CURRENCY}(?<![\\w-])\\d(?:${DIGIT_SEPARATOR}\\d){3,9}(?![\\w-])`, "gi"),
   // Letter prefix: G-482913
   /\b[A-Z]{1,3}-\d{4,10}\b/gi,
   // Letters and digits mixed, 6–10 characters: K7P9QX, k7p9qx
@@ -166,8 +174,9 @@ function findOtps(text, otpEmail) {
   return spans;
 }
 
-// Keeps the earliest span, and the longest when two start together,
-// so a code inside a link is covered by the link.
+// Keeps the earliest span, and the longest when two start together, so a
+// code inside a link is covered by the link. On a tie the earlier span in the
+// list wins.
 function removeOverlaps(spans) {
   const sorted = [...spans].sort((a, b) => a.start - b.start || b.end - a.end);
   const kept = [];
@@ -183,7 +192,11 @@ export function isOtpEmail(text) {
 
 export function redactText(text, { otpEmail = isOtpEmail(text) } = {}) {
   const normalised = normaliseDigits(text);
-  const spans = removeOverlaps([...findLinks(normalised, otpEmail), ...findOtps(normalised, otpEmail)]);
+  const identifiers = findIdentifiers(normalised);
+  const otps = findOtps(normalised, otpEmail);
+  // In an OTP email, "one-time password is 48291375" is an OTP, not a password.
+  const ordered = otpEmail ? [...otps, ...identifiers] : [...identifiers, ...otps];
+  const spans = removeOverlaps([...findLinks(normalised, otpEmail), ...ordered]);
   let output = "";
   let cursor = 0;
   for (const span of spans) {
@@ -194,6 +207,8 @@ export function redactText(text, { otpEmail = isOtpEmail(text) } = {}) {
   return {
     text: output,
     redactions: spans.map(({ type, start, end }) => ({ type, start, end })),
+    // The rules are sure this text held a secret, so it is stored in strict mode.
+    secretFound: otpEmail || spans.some((span) => SECRET_TYPES.has(span.type)),
   };
 }
 
@@ -205,6 +220,7 @@ export function redactEmail({ subject = "", body = "" }) {
   return {
     subject: redactedSubject.text,
     body: redactedBody.text,
+    secretFound: redactedSubject.secretFound || redactedBody.secretFound,
     redactions: [
       ...redactedSubject.redactions.map((r) => ({ ...r, field: "subject" })),
       ...redactedBody.redactions.map((r) => ({ ...r, field: "body" })),

@@ -76,6 +76,6 @@ const mustKeep = (name, text, value) =>
 mustKeep("Pincode is not a PIN", "Ship to Pincode: 560001, Bengaluru", "560001");
 mustKeep("course code", "Course CS3021 starts Monday", "CS3021");
 
-test("password in plain text (passwords are not handled yet)", { todo: true }, () => {
+test("password in plain text", () => {
   assert.ok(!redacted("Your temporary password is Xy7#pQ2!").includes("Xy7#pQ2!"));
 });

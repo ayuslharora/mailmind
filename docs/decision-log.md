@@ -69,6 +69,8 @@ The final design is in `docs/PRD.md`. The classification design is covered in de
 | 5 | Replace every number with `[NUM:n]` for classification | Lost meaning: "₹5 debited" vs "₹50,000 debited"; "due in 2 days" | Changed |
 | 6 | **Typed placeholders:** only code-shaped numbers hidden; amounts become ranges; dates, times and small counts kept; facts such as `deadline_in_days` computed on the server | — | **Chosen** |
 | 7 | Coupon codes (e.g. SAVE50) were redacted as if they were OTPs, so "find my coupon" failed | Storing unredacted text would store real OTPs | **Fix 1 (now):** codes next to coupon/promo/discount words, in emails with no OTP words, are kept. **Fix 2 (future idea):** the AI sees placeholders, and the server swaps real values back in for the user's screen only. Downgraded from stretch goal because every answer already links to the exact Gmail message, so a hidden value is one click away |
+| 8 | Cards (Luhn check), Aadhaar (Verhoeff check), PAN, account numbers after an account label, PINs/CVVs, passwords after "password is/:" | Writing the tests exposed two bugs in the existing module: "PIN code: 560001" (a postal code) was hidden as an OTP, and "Never share your OTP" in a bank alert hid every amount ("Rs 2500" → `[OTP]`) | **Fixed:** "PIN code" is not a code word; a number after Rs/₹/INR is never a code. 107 tests pass |
+| 9 | IFSC codes hidden too | They are public bank-branch codes; hiding them protects nothing (YAGNI) | **Dropped** |
 
 **Accepted trade-off:** some over-redaction (e.g. a room number near "sign in"). The user loses nothing visible, because opening an email shows the original, fetched live from Gmail.
 

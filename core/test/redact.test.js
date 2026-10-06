@@ -15,7 +15,6 @@ const OTP_CASES = [
   ["8 digits", "Your one-time password is 48291375", "48291375"],
   ["alphanumeric", "Your login code: K7P9QX", "K7P9QX"],
   ["spelled out", "Your passcode is four eight two nine one three.", "four eight two nine one three"],
-  ["PIN", "Your temporary PIN is 7319, change it after first use.", "7319"],
   ["code on next line", "Here is your sign-in code\n\n   551077\n\nIt expires in 10 minutes.", "551077"],
   ["far from keyword in OTP email", "Your OTP is below. We sent it because someone tried to sign in from a new device in Mumbai at 10:42. If that was you, enter the number on the screen to continue: 902211", "902211"],
 ];

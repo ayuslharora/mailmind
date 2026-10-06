@@ -47,7 +47,7 @@ Instead of trusting a model to protect secrets, the model is never given any. Be
 | **Code-shaped** (4–10 digits standing alone) | `Your OTP is 482913` | `Your OTP is [NUM:6]` | The only shape a one-time code takes. The digit count is a useful hint and reveals nothing |
 | Short number next to a secret word | `CVV 123`, `PIN 42` | `CVV [NUM:3]`, `PIN [NUM:2]` | Near *cvv, pin, otp, code, password*, even short numbers are hidden |
 | Money | `₹50,000 debited`, `Avl bal Rs 1,23,456` | `[AMOUNT:₹10k–1L] debited`, `Avl bal [AMOUNT:₹1L–10L]` | The size range keeps the urgency signal; the exact balance stays private |
-| Card, Aadhaar, PAN, account number, IFSC | | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]`, `[IFSC]` | Always hidden |
+| Card, Aadhaar, PAN, account number | | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]` | Always hidden |
 | Time | `3pm`, `11:59pm` | kept | Not a secret |
 | Date | `15 Oct 2026`, `15/10/2026` | kept | Not a secret |
 | Small counts, durations, percentages (1–3 digits) | `3 missed calls`, `in 2 days`, `20%` | kept | Too short to be a one-time code |
