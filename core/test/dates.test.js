@@ -7,6 +7,11 @@ const sentAt = new Date("2026-10-05T10:00:00+05:30");
 const ist = (iso) => new Date(`${iso}+05:30`).toISOString();
 const due = (text, kind = "deadline") => findDate(text, { sentAt, kind })?.dueAt.toISOString();
 
+test("month name first, American style", () => {
+  // Sent in October, so the next July 21.
+  assert.equal(due("Submissions close July 21 at 5 PM"), ist("2027-07-21T17:00:00"));
+});
+
 test("weekday with a time", () => {
   assert.equal(due("Assignment 3 is due this Friday 11:59pm"), ist("2026-10-09T23:59:00"));
 });
@@ -62,7 +67,7 @@ test("a bare day like 'the 15th' is in this month, or next month if it has passe
   assert.equal(due("Fees must be paid by the 15th of this month"), ist("2026-10-15T23:59:59"));
   assert.equal(due("Offer valid till 31st"), ist("2026-10-31T23:59:59"));
   assert.equal(due("Rent due on the 3rd"), ist("2026-11-03T23:59:59"));
-  assert.equal(due("Exam on Wednesday, 2nd slot", "deadline"), ist("2026-10-07T23:59:59"), "'2nd slot' is not a date");
+  assert.equal(due("Exam on Wednesday, 2nd slot", "event"), ist("2026-10-07T23:59:59"), "'2nd slot' is not a date");
 });
 
 test("a time written just after a date belongs to it", () => {
@@ -73,4 +78,41 @@ test("a time written just after a date belongs to it", () => {
 test("a day/month pair with no year needs a date word nearby", () => {
   assert.equal(due("You scored 10/11 in the quiz"), undefined);
   assert.equal(due("Fee deadline: 10/11"), ist("2026-11-10T23:59:59"));
+});
+
+// Found on a real inbox (7 October 2026); wording changed, shapes kept.
+test("'now' and durations are not dates", () => {
+  const text = "Our AI newsletter (4 min daily) is here. Voice commands are now live. 24/7 support. See you all next week.";
+  assert.equal(due(text, "deadline"), undefined);
+  assert.equal(due(text, "event"), undefined);
+  assert.equal(due("The webinar is LIVE now! Refresh the page after a few minutes.", "event"), undefined);
+});
+
+test("'today' inside a sentence is not a date", () => {
+  const text = "Today's best coding agents rely on huge models. Entry Deadline: November 25, 2026";
+  assert.equal(due(text, "event"), ist("2026-11-25T23:59:59"));
+  assert.equal(due(text, "deadline"), ist("2026-11-25T23:59:59"));
+});
+
+test("'now' next to the word deadline does not beat the real date", () => {
+  const sentInJuly = new Date("2026-07-17T21:00:00+05:30");
+  const text = "Submissions are open until July 21 at 5 PM PT. That idea in your backlog now has a deadline.";
+  assert.equal(findDate(text, { sentAt: sentInJuly }).dueAt.toISOString(), ist("2026-07-22T05:30:00"));
+});
+
+test("'end of day' right after a date belongs to that date", () => {
+  const sentInAugust = new Date("2026-08-31T22:00:00+05:30");
+  const text = "Apply to organize before Sept 7. Deadline: Sept 7 (end of day Eastern Time)";
+  assert.equal(findDate(text, { sentAt: sentInAugust }).dueAt.toISOString(), ist("2026-09-07T23:59:59"));
+});
+
+test("casual dates still count next to a deadline or event word", () => {
+  assert.equal(due("Starts in 2 hours", "event"), ist("2026-10-05T12:00:00"));
+  assert.equal(due("Assignment due tomorrow"), ist("2026-10-06T23:59:59"));
+  assert.equal(due("Happy Friday! Here are this week's deals."), undefined);
+});
+
+test("dates inside links are ignored", () => {
+  assert.equal(due("Read more: https://news.example.com/2026/10/09/big-launch and www.example.com/2026/10/12/x"), undefined);
+  assert.equal(due("Register by 9 Oct: https://events.example.com/2026/10/20/info"), ist("2026-10-09T23:59:59"));
 });

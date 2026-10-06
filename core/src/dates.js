@@ -17,6 +17,13 @@ const ANY_KEYWORD = new RegExp(`${KEYWORDS.deadline.source}|${KEYWORDS.event.sou
 const KEYWORD_REACH = 40;
 // A time this close after a date belongs to it: "7th Oct (Wed) 2:30 PM".
 const TIME_REACH = 20;
+// Casual dates ("today", "in 2 hours", "Friday") only count this close to a
+// deadline or event word: "due tomorrow" is a date, "Today's best agents" is not.
+const CASUAL_REACH = 15;
+const END_OF_DAY_TEXT = /^(?:eod|cob|end\s+of|close\s+of)/i;
+// Links often contain dates (/2026/10/01/post) that are not deadlines.
+const LINK = /\b(?:https?:\/\/|www\.)\S+/gi;
+const blankLinks = (text) => text.replace(LINK, (link) => " ".repeat(link.length));
 
 const MONTHS = "jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec";
 const DAY_WORDS = "mon|tue|wed|thu|fri|sat|sun|today|tomorrow|tonight";
@@ -62,7 +69,12 @@ const bareDayParser = {
   },
 };
 
+// Day first for numbers (15/10 is 15 October), but "July 21" is the 21st of
+// July: the British parser would read it as July 2021, so the month-name
+// parser is taken from the American one.
 const parser = chrono.en.GB.clone();
+const monthFirstParser = chrono.en.casual.parsers.find((p) => p.constructor.name === "ENMonthNameMiddleEndianParser");
+parser.parsers = parser.parsers.map((p) => (p.constructor.name === "ENMonthNameMiddleEndianParser" ? monthFirstParser : p));
 parser.parsers.push(endOfDayParser, bareDayParser);
 
 // Characters between a keyword and a date; 0 if they overlap.
@@ -78,25 +90,41 @@ const keywordSpans = (text, pattern) =>
 const nearestKeyword = (keywords, candidate) =>
   Math.min(Infinity, ...keywords.map((keyword) => distance(keyword, candidate)));
 
+// No definite day of the month ("Friday", "this week", "11:59 PM"), a casual
+// word ("today", "tomorrow"), a relative date ("in 2 hours") or "EOD".
+function isCasual(result) {
+  const tags = [...(result.tags?.() ?? [])];
+  return (
+    !result.start.isCertain("day") ||
+    END_OF_DAY_TEXT.test(result.text) ||
+    tags.some((tag) => tag.startsWith("casualReference/") || tag.startsWith("result/relativeDate"))
+  );
+}
+
 function toCandidates(results) {
   const candidates = [];
   for (const result of results) {
+    // "now" is when the email was sent, never a deadline.
+    if (result.tags?.().has("casualReference/now")) continue;
     const candidate = {
       start: result.index,
       end: result.index + result.text.length,
       text: result.text,
       hasDay: result.start.isCertain("day") || result.start.isCertain("weekday"),
       hasTime: result.start.isCertain("hour"),
+      casual: isCasual(result),
       date: result.start.date(),
     };
     const previous = candidates.at(-1);
+    const followsDate = previous && previous.hasDay && candidate.start - previous.end <= TIME_REACH;
+    // "Sept 7 (end of day Eastern Time)": the end of Sept 7, not of today.
+    if (followsDate && END_OF_DAY_TEXT.test(candidate.text)) continue;
     // A weekday next to a date only repeats it: "7th Oct (Wed) 2:30 PM".
-    const timeForPrevious =
-      previous && previous.hasDay && !previous.hasTime && candidate.hasTime && !result.start.isCertain("day") &&
-      candidate.start - previous.end <= TIME_REACH;
+    const timeForPrevious = followsDate && !previous.hasTime && candidate.hasTime && !result.start.isCertain("day");
     if (timeForPrevious) {
       previous.date = istDate(istParts(previous.date), result.start.get("hour"), result.start.get("minute"), 0);
       previous.hasTime = true;
+      previous.casual &&= candidate.casual;
       previous.end = candidate.end;
     } else {
       candidates.push(candidate);
@@ -108,11 +136,14 @@ function toCandidates(results) {
 // Returns { dueAt, hasTime } or null. Dates are read day first (15/10 is 15
 // October), relative to when the email was sent, in Indian time. A date
 // without a time means the end of that day. Dates before the email was sent
-// are ignored. When there are several, the one nearest a deadline or event
-// word wins; otherwise the first one in the text.
-export function findDate(text, { sentAt, kind = "deadline" }) {
+// are ignored, and so are "now" and dates inside links. Casual dates ("today", "Friday", "in 2 hours")
+// count only next to a deadline or event word. When there are several, the
+// one nearest a deadline or event word wins; otherwise the first in the text.
+export function findDate(rawText, { sentAt, kind = "deadline" }) {
+  const text = blankLinks(rawText);
   const sentDay = startOfDayIst(sentAt);
   const anyKeywords = keywordSpans(text, ANY_KEYWORD);
+  const keywords = keywordSpans(text, KEYWORDS[kind]);
   const candidates = toCandidates(
     parser.parse(text, { instant: sentAt, timezone: IST_OFFSET_MINUTES }, { forwardDate: true }),
   )
@@ -122,11 +153,11 @@ export function findDate(text, { sentAt, kind = "deadline" }) {
     .filter(
       (candidate) =>
         !/^\d{1,2}[/.-]\d{1,2}$/.test(candidate.text) || nearestKeyword(anyKeywords, candidate) <= KEYWORD_REACH,
-    );
+    )
+    .filter((candidate) => !candidate.casual || nearestKeyword(keywords, candidate) <= CASUAL_REACH);
 
   if (candidates.length === 0) return null;
 
-  const keywords = keywordSpans(text, KEYWORDS[kind]);
   const best = candidates.reduce((a, b) => (nearestKeyword(keywords, b) < nearestKeyword(keywords, a) ? b : a));
   const chosen = nearestKeyword(keywords, best) <= KEYWORD_REACH ? best : candidates[0];
 

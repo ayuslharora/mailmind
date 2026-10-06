@@ -263,7 +263,7 @@ Every screen has loading, empty, success and error states.
 | Probabilities | Same set: how often answers given at 0.8 are actually right | Thresholds chosen from the data, not guessed |
 | Security-email recall | Same set | Close to 100%; every miss reviewed |
 | Promotions | 20 marketing emails written to sound urgent | None appear under "Needs action" |
-| Deadlines and events | 17 unit tests (day-first dates, EOD, "by the 15th", times after dates, scores like 10/11 ignored) plus 25 real threads with dates | ≥ 90% correct |
+| Deadlines and events | 25 unit tests (day-first dates, EOD, "by the 15th", times after dates, scores like 10/11 ignored) plus 25 real threads with dates | ≥ 90% correct |
 | RAG | 20 questions with known answers, including follow-ups | ≥ 80% correct, every answer cited |
 | Authorisation | Automated tests across two users and demo visitors | No cross-user access |
 | Demo inbox | Every fake email carries its correct label | Regression test for the whole pipeline |
