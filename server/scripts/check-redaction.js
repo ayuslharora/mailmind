@@ -4,7 +4,8 @@
 //   npm run check-redaction --workspace server -- --max 20 --query "newer_than:30d"
 //
 // Nothing is saved and nothing is sent anywhere except Google. Run it in your
-// own terminal, not through an AI assistant: the output contains your email.
+// own terminal, not through an AI assistant: the output contains your email
+// (redacted, but still your names, subjects and messages).
 
 import dotenv from "dotenv";
 import http from "http";
@@ -73,11 +74,14 @@ const domainOf = (from) => from.match(/@([^>\s]+)/)?.[1] ?? from;
 const indent = (text) => text.replace(/^/gm, "    ");
 const shorten = (text, max) => (text.length > max ? `${text.slice(0, max)}…` : text);
 
+// Shows only what kind of thing was hidden and how many, never the value, so
+// the output can be shared without sharing the secrets.
 function printEmail(index, total, email, result) {
-  const original = { subject: email.subject, body: email.body };
-  const hidden = result.redactions
-    .filter((r) => r.type !== "LINK_TRIMMED")
-    .map((r) => `${r.type} ${shorten(original[r.field].slice(r.start, r.end), 60)}`);
+  const counts = {};
+  for (const r of result.redactions) {
+    if (r.type !== "LINK_TRIMMED") counts[r.type] = (counts[r.type] ?? 0) + 1;
+  }
+  const hidden = Object.entries(counts).map(([type, n]) => `${type} ×${n}`);
 
   console.log(`\n━━━ ${index}/${total}  ${domainOf(email.from)}  ·  ${email.date.toISOString().slice(0, 10)}  ·  ${result.strict ? "STRICT" : "light"}`);
   console.log(`Subject: ${result.subject}`);

@@ -10,7 +10,7 @@ import { findIdentifiers, SECRET_TYPES } from "./identifiers.js";
 // is in the subject or body, every code-shaped token in the email is redacted.
 // Hindi words are matched without \b, which only understands ASCII letters.
 const STRONG_OTP_WORDS =
-  /\bo\.?t\.?p\b|\bone[\s-]?time\s+(?:password|passcode|pass|pin|code)\b|\bpasscode\b|\b(?:verification|security|log[\s-]?in|sign[\s-]?in|auth(?:entication)?|access|confirmation)\s+(?:code|key|number)\b|\b2fa\b|\btwo[\s-]?(?:factor|step)\b|\bmfa\b|ओटीपी|पासकोड/i;
+  /\bo\.?t\.?p\b|\bone[\s-]?time\s+(?:password|passcode|pass|pin|code)\b|\bpasscode\b|\b(?:verification|security|log[\s-]?in|sign[\s-]?in|auth(?:entication)?|access|confirmation|recovery|backup)\s+(?:codes?|keys?|number)\b|\b2fa\b|\btwo[\s-]?(?:factor|step)\b|\bmfa\b|ओटीपी|पासकोड/i;
 
 // Words that sometimes sit next to a code. Only tokens near them are redacted.
 // "PIN code" is the Indian postal code, so neither word counts there.
@@ -101,6 +101,8 @@ function parseLink(url) {
 }
 
 const hasLetterAndDigit = (s) => /\d/.test(s) && /[a-z]/i.test(s);
+// Words joined in CamelCase (SharkStudios), unlike random case (qWeRtYuIoP).
+const CAMEL_CASE = /^[A-Z]?[a-z]{2,}(?:[A-Z][a-z]{2,})+$/;
 
 // A path segment that looks generated rather than written: long, all digits,
 // mixed letters and digits, or randomly mixed case (x7Kq9Pz, a1b2-c3d4, qWeRtYuIoP).
@@ -110,7 +112,13 @@ function looksLikeToken(segment) {
   const parts = segment.split(/[-_.]/);
   if (parts.filter((part) => part.length >= 3 && hasLetterAndDigit(part)).length >= 2) return true;
   if (parts.some((part) => part.length >= 6 && hasLetterAndDigit(part))) return true;
-  return segment.length >= 8 && !/[-_.]/.test(segment) && /[a-z]/.test(segment) && /[A-Z]/.test(segment);
+  return (
+    segment.length >= 8 &&
+    !/[-_.]/.test(segment) &&
+    /[a-z]/.test(segment) &&
+    /[A-Z]/.test(segment) &&
+    !CAMEL_CASE.test(segment)
+  );
 }
 
 // Kept: plain content links such as a blog post. Query strings and fragments
@@ -205,8 +213,10 @@ function removeOverlaps(spans) {
   return kept;
 }
 
+// Links are ignored: a random token in a tracking link can contain "otp" or "2fa".
 export function isOtpEmail(text) {
-  return STRONG_OTP_WORDS.test(normaliseDigits(text));
+  const withoutLinks = LINK_PATTERNS.reduce((rest, pattern) => rest.replace(pattern, " "), normaliseDigits(text));
+  return STRONG_OTP_WORDS.test(withoutLinks);
 }
 
 // Strict mode hides every code-shaped number and every link. It is the

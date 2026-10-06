@@ -1,5 +1,5 @@
 // Finds Indian and payment identifiers: card numbers, Aadhaar, PAN, bank
-// account numbers, PINs/CVVs and passwords written in plain text.
+// account numbers, PINs/CVVs, passwords written in plain text, and IP addresses.
 //
 // Checksums (Luhn for cards, Verhoeff for Aadhaar) separate real identifiers
 // from order and tracking numbers of the same length. About one random number
@@ -61,6 +61,10 @@ const PAN = /\b[a-z]{3}[abcfghjlpt][a-z]\d{4}[a-z]\b/gi;
 const ACCOUNT = /\b(?:a\/c|acct|account)(?:\s*(?:no|num|number)\b\.?)?\s*[:#-]?\s*(\d(?:[ -]?\d){8,17})(?![\w-])/gid;
 // "PIN code" is the Indian postal code, so it is not a secret.
 const PIN = /\b(?:cvv2?|cvc|m-?pin|t-?pin|pin)\b(?!\s*-?\s*code)\s*(?:is\b|[:=-])?\s*(\d{2,8})(?![\w-])/gid;
+// Four numbers from 0 to 255 joined by dots. Shown in new-login alerts, and
+// enough to locate someone roughly. Not followed by another ".number".
+const OCTET = "(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)";
+const IP = new RegExp(`(?<![\\w.])${OCTET}(?:\\.${OCTET}){3}(?!\\.?\\w)`, "g");
 // A password after "is", ":" or "=". \b only understands ASCII, so the Hindi
 // word is matched on its own.
 const PASSWORD =
@@ -97,6 +101,7 @@ export function findIdentifiers(text) {
     ...spansFromMatches(text, CARD, "CARD", (m) => luhnValid(onlyDigits(m))),
     ...spansFromMatches(text, AADHAAR, "AADHAAR", (m) => verhoeffValid(onlyDigits(m))),
     ...spansFromMatches(text, PAN, "PAN"),
+    ...spansFromMatches(text, IP, "IP"),
     ...spansFromMatches(text, PIN, "PIN", () => true, 1),
     ...spansFromMatches(text, PASSWORD, "PASSWORD", looksLikePassword, 1),
   ];

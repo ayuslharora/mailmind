@@ -24,13 +24,21 @@ function findPart(part, mimeType) {
   return null;
 }
 
+// Some senders put only a stub such as "Email Template" in the plain-text
+// part, so a short plain-text part loses to the HTML part.
+const MIN_PLAIN_TEXT = 200;
+
+// Removes HTML comments such as <!--[if !mso]><!--> that some senders leave
+// in the plain-text part.
+const stripComments = (text) => text.replace(/<!--[\s\S]*?-->/g, "");
+
 // Prefers the plain-text part; falls back to the HTML part converted to text.
 // Links stay in the text as "label [url]" so redaction can see them.
 function bodyText(payload) {
   const plain = findPart(payload, "text/plain");
-  if (plain) return decode(plain.body.data);
   const html = findPart(payload, "text/html");
-  if (!html) return "";
+  const plainText = plain ? stripComments(decode(plain.body.data)) : "";
+  if (plainText.trim().length >= MIN_PLAIN_TEXT || !html) return plainText;
   return convert(decode(html.body.data), {
     wordwrap: false,
     selectors: [
