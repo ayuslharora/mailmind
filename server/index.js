@@ -9,9 +9,8 @@ import errorMiddleware from "./middlewares/error.middleware.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// One .env at the repository root, shared by every package.
 dotenv.config({
-  path: path.join(__dirname, "../.env"),
+  path: path.join(__dirname, ".env"),
   quiet: true,
 });
 

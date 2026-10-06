@@ -20,7 +20,7 @@ Requires Node 22.12 or later.
 
 ```sh
 npm install
-cp .env.example .env   # then fill in the values
-npm run dev            # API on :4000, client on :5173
-npm test               # all workspaces
+cp server/.env.example server/.env   # then fill in the values
+npm run dev                          # API on :4000, client on :5173
+npm test                             # all workspaces
 ```
