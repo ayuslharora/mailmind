@@ -84,18 +84,18 @@ Cloudflare Worker (cron) ──► /health every 10 min (keeps Render awake) and
 1. **Fetch:** Gmail API, read-only, last 30 days (spam and trash skipped), including Sent mail for context.
 2. **Clean:** HTML to text, quoted replies removed, grouped by thread.
 3. **Build the thread context:** the latest message (first ~1,200 and last ~300 characters), the two earlier messages trimmed to ~300 characters, and a `from_me` flag on each.
-4. **Make the classification copy:**
+4. **Redact:** the same redacted copy is classified, stored and later used by RAG (section 8). There is no separate copy for classification.
 
    | Content | Treatment |
    | --- | --- |
-   | Code-shaped numbers (4–10 digits), and short numbers next to *cvv / pin / otp / code / password* | `[NUM:n]` |
-   | Money | Range, e.g. `[AMOUNT:₹10k–1L]` |
-   | Card, Aadhaar, PAN, account number | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]` |
-   | Links | `[LINK:domain]` |
-   | Dates, times, small counts, percentages | Kept |
+   | One-time codes (near code words, or anywhere in an OTP email) | `[OTP]` |
+   | Card (Luhn check), Aadhaar (Verhoeff check), PAN, account number, PIN/CVV, password | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]`, `[PIN]`, `[PASSWORD]` |
+   | Risky links (reset, login, tokens, shorteners) | `[LINK:domain]` |
+   | Safe content links | Kept, tracking removed |
+   | Amounts, dates, times, order numbers, coupon codes | Kept |
    | Sender | Domain only |
 
-5. **Add facts computed on the server:** `deadline_in_days` (chrono-node), `amount_range`, Gmail's own category label, and whether the email is bulk mail (`List-Unsubscribe` / `Precedence: bulk`).
+5. **Add facts computed on the server:** `deadline_in_days` (chrono-node), Gmail's own category label, and whether the email is bulk mail (`List-Unsubscribe` / `Precedence: bulk`).
 6. **One gpt-oss-20b call** (Groq, structured output, low reasoning effort) answering five questions: security email? (yes/no), category (Academic, Jobs, Finance, Personal, Notifications, Promos), needs action? (yes/no), urgency (0–4), date kind (deadline / event / none). Every answer comes with a probability, in the same shape Jev returns. These probabilities are the model's own estimates, not calibrated values, so the thresholds are tuned on the hand-labelled evaluation set.
 7. **On failure:** invalid output is retried once; if Groq is unavailable or rate-limited, the thread is marked pending and retried later. It is never processed with less redaction.
 8. **Post-classification rules:** if the classifier and Gmail's headers both say promotion, urgency is capped and the thread never appears under "Needs action".
@@ -228,7 +228,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 
 - **Read-only Gmail access.** Mailmind cannot send, delete or change mail.
 - **Secrets never leave the API server.** Raw email text exists only in memory during processing; originals are never stored.
-- **Least data to each AI service:** the classifier gets the classification copy (no code-shaped numbers, no link paths, sender domain only); Qwen embeddings and the RAG answers get the stored copy, which already has secrets removed. In the evaluation, Laya and Jev receive the same classification copy.
+- **Only redacted text reaches AI services:** the classifier, Qwen embeddings and RAG answers all receive the same redacted copy, so no secret reaches any of them. The classifier sees only the sender's domain. In the evaluation, Laya and Jev receive the same copy.
 - **Data policies:** each provider's data-use policy (retention and training) is checked and stated plainly in the README.
 - **Encrypted credentials:** Gmail refresh tokens and users' API keys, with AES-256-GCM and a master key in an environment variable. Email text is stored already redacted and not encrypted, so keyword search works.
 - **Authorisation:** every query is scoped to the logged-in user; tests check that one user cannot read another's data. Demo visitors are temporary users with their own data.
@@ -261,7 +261,6 @@ Every screen has loading, empty, success and error states.
 | Classification | 100 hand-labelled real threads; gpt-oss-20b vs Laya vs Jev (if available) vs fine-tuned Laya (stretch) | ≥ 85% category accuracy; accuracy, speed and cost compared |
 | Probabilities | Same set: how often answers given at 0.8 are actually right | Thresholds chosen from the data, not guessed |
 | Security-email recall | Same set | Close to 100%; every miss reviewed |
-| Typed placeholders | Compared with hiding every number | Effect on urgency and deadline answers reported |
 | Promotions | 20 marketing emails written to sound urgent | None appear under "Needs action" |
 | Deadlines and events | 25 threads with dates | ≥ 90% correct |
 | RAG | 20 questions with known answers, including follow-ups | ≥ 80% correct, every answer cited |
@@ -280,7 +279,7 @@ Every screen has loading, empty, success and error states.
 | --- | --- |
 | 7–8 Oct | Repository and git, project skeleton, Google sign-in, first deployment of all services; Groq model check; start labelling real emails |
 | 9–11 Oct | Gmail backfill (resumable, threads, Sent mail), cleaning, demo inbox generation |
-| 12–14 Oct | Classification copy and tests (including coupon rule), gpt-oss-20b classifier in the decision-model shape, promotion rules, storage tiers |
+| 12–14 Oct | Redaction and tests (identifiers, coupon rule), gpt-oss-20b classifier in the decision-model shape, promotion rules, storage tiers |
 | 15–16 Oct | Deadlines and urgency, Today view and actions, sender rules, Add to Calendar |
 | 17–19 Oct | RAG: chunking, embeddings, indexes, hybrid retrieval, cited answers, follow-ups, Gmail links |
 | 20–21 Oct | Incremental sync and deletions, scheduled sync, bring your own key, delete my data, demo copies per visitor |

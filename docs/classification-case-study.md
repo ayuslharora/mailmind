@@ -36,46 +36,37 @@ Answering these well needs an AI model. But inboxes are full of OTPs, card numbe
 | **Local zero-shot NLI model** | Free and private, but needs memory Render does not have, and runs one model pass per label | Dropped: the classifier only receives redacted text |
 | **Fine-tuned Laya, self-hosted** | Laya's weights are open (Apache-2.0); a public Kaggle notebook fine-tunes it in about four hours on two free T4 GPUs. It could run on a free Hugging Face Space (CPU), avoiding both the 31 October deadline and a third-party provider. Needs several hundred labelled real emails and a second service to keep awake | **Stretch goal**, attempted only once the core is done |
 
-## 4. The key idea: classify a redacted copy that keeps meaning but not secrets
+## 4. The key idea: classify the redacted copy, never the raw email
 
-Instead of trusting a model to protect secrets, the model is never given any. Before classification, the server makes a **classification copy** of the thread. A first design replaced *every* number with a placeholder, but that threw away meaning: "₹5 debited" and "₹50,000 debited" looked identical, and "due in 2 days" became "due in [NUM:1] days". The final design looks at what each number is, hides only the ones that could be secrets, and keeps or summarises the rest.
+Instead of trusting a model to protect secrets, the model is never given any. Every email is redacted on the server first, and that **one redacted copy** is classified, stored and later used by RAG.
 
-### Numbers
-
-| Number type | Example | In the classification copy | Why it is safe |
-| --- | --- | --- | --- |
-| **Code-shaped** (4–10 digits standing alone) | `Your OTP is 482913` | `Your OTP is [NUM:6]` | The only shape a one-time code takes. The digit count is a useful hint and reveals nothing |
-| Short number next to a secret word | `CVV 123`, `PIN 42` | `CVV [NUM:3]`, `PIN [NUM:2]` | Near *cvv, pin, otp, code, password*, even short numbers are hidden |
-| Money | `₹50,000 debited`, `Avl bal Rs 1,23,456` | `[AMOUNT:₹10k–1L] debited`, `Avl bal [AMOUNT:₹1L–10L]` | The size range keeps the urgency signal; the exact balance stays private |
-| Card, Aadhaar, PAN, account number | | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]` | Always hidden |
-| Time | `3pm`, `11:59pm` | kept | Not a secret |
-| Date | `15 Oct 2026`, `15/10/2026` | kept | Not a secret |
-| Small counts, durations, percentages (1–3 digits) | `3 missed calls`, `in 2 days`, `20%` | kept | Too short to be a one-time code |
-
-### Links
-
-| Original | In the classification copy |
+| Content | In the redacted copy |
 | --- | --- |
-| `https://bank.example.com/reset?token=abc` | `[LINK:bank.example.com]` |
-| Any other link | `[LINK:domain]`. Only the domain helps classification, and every path or query could hold a token |
+| One-time codes: code-shaped tokens near code words, or every code-shaped token in an OTP email | `[OTP]` |
+| Card numbers (Luhn check), Aadhaar (Verhoeff check), PAN, account numbers after an account label | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]` |
+| PINs and CVVs, passwords written after "password is" | `[PIN]`, `[PASSWORD]` |
+| Risky links (reset, login, tokens, shorteners, all links in an OTP email) | `[LINK:domain]` |
+| Safe content links (blogs, newsletters) | Kept, query string removed |
+| Amounts, dates, times, order numbers, coupon codes | Kept |
 
-Only the sender's **domain** is sent, never the full address.
+Only the sender's **domain** is sent to the classifier, never the full address.
+
+**A separate classification copy was designed and then dropped.** It would have turned amounts into ranges (`[AMOUNT:₹10k–1L]`) and every other long number into `[NUM:n]`. It made sense when Laya, whose provider gives no no-training guarantee, was the classifier. Now the classifier is gpt-oss-20b on Groq, and Groq already receives the redacted copy for RAG answers, so a stricter copy only for classification would hide almost nothing from it, at the cost of a day of work and another set of rules (YAGNI). Secrets are removed from the one copy either way.
 
 ### Facts computed on our server
 
-Some meaning is worked out on the server from the raw text and passed to the model as separate, harmless fields, so the model gets the meaning without the raw values:
+Some meaning is worked out on the server and passed to the model as separate fields:
 
 | Field | Computed by | Example |
 | --- | --- | --- |
 | `deadline_in_days` | chrono-node on the raw text, using the email's sent date as the reference and IST as the time zone | `2` |
-| `amount_range` | Largest money amount, bucketed | `"₹10k–1L"` |
 | `gmail_category` | Gmail's own label (`CATEGORY_PROMOTIONS`, `CATEGORY_UPDATES`, …) | `"promotions"` |
 | `bulk_sender` | `List-Unsubscribe` or `Precedence: bulk` header present | `true` |
 
 ## 5. Final flow
 
 ```
-Gmail API → clean thread → classification copy (+ server-computed facts) → gpt-oss-20b (one call)
+Gmail API → clean thread → redacted copy (+ server-computed facts) → gpt-oss-20b (one call)
           → post-classification rules → classification stored on the thread
                                           └─ invalid output: retry once
                                              └─ Groq fails or rate-limited: mark pending, retry later
@@ -89,7 +80,7 @@ Gmail API → clean thread → classification copy (+ server-computed facts) →
    - **`from_me` on every message.** If the latest message is the user's own, nothing is waiting on them.
 
    Sending the whole thread on every update was rejected: long threads would exceed the context limits of the decision models in the evaluation, and cost and rate-limit pressure would grow with every reply.
-4. **Make the classification copy** (section 4) and compute the server-side facts.
+4. **Redact** (section 4) and compute the server-side facts.
 5. **One gpt-oss-20b call** with all five questions (low reasoning effort).
 6. **Apply the post-classification rules** (below) and store one normalised result on the thread, whichever model produced it.
 
@@ -107,7 +98,6 @@ Gmail API → clean thread → classification copy (+ server-computed facts) →
     },
     "earlier": [],
     "deadline_in_days": 4,
-    "amount_range": null,
     "gmail_category": "updates",
     "bulk_sender": false
   },
@@ -226,7 +216,6 @@ Every failure leads to a safer state, never a looser one.
 | --- | --- |
 | Raw email text | Nowhere. In memory on the API server only |
 | One-time codes, cards, Aadhaar, PAN, account numbers, link paths | Nowhere. Replaced before anything is sent |
-| Money amounts | Only as a range (`₹10k–1L`) |
 | Dates, times, small counts, the words of the email | gpt-oss-20b on Groq (and Laya or Jev during the evaluation) |
 | Full sender address | Nowhere. Only the domain is sent |
 | Classification result | MongoDB |
@@ -242,7 +231,6 @@ All measured on 100 hand-labelled threads from the author's own inbox:
 | Category accuracy and needs-action precision/recall for **gpt-oss-20b, Laya, Jev (if a key is available) and fine-tuned Laya (stretch)** | Which classifier to trust, and whether a free model is good enough |
 | **Calibration of gpt-oss-20b's probabilities** | Whether its stated probabilities mean anything, and where the thresholds should sit |
 | Security-email recall | Must be close to 100%; misses are reviewed one by one |
-| **Typed placeholders vs hiding every number** (with gpt-oss-20b) | Whether keeping dates, times, counts and amount ranges improves urgency and deadline answers |
 | **Thread context vs latest message only** | Whether `earlier` and `from_me` improve needs-action accuracy |
 | **Promo rules on 20 marketing emails written to sound urgent** | None should reach "Needs action" |
 | Latency and cost per 1,000 threads | Practical comparison of the models |
@@ -251,7 +239,7 @@ The labelled emails must be real and kept separate from any data used for fine-t
 
 ## 9. Trade-offs accepted
 
-- **Some meaning is still hidden:** an exact balance becomes a range, and a code-shaped number that was really an order ID becomes `[NUM:7]`.
+- **Some meaning is still hidden:** a number near a code word, such as a room number after "sign in", becomes `[OTP]`, and every code-shaped number in an OTP email is hidden. Over-redaction is preferred to a leak.
 - **The probabilities are not calibrated.** gpt-oss-20b states its own confidence; a decision model would be more reliable here. Thresholds are tuned on real labelled emails, and the security threshold stays low so mistakes lead to stricter storage.
 - **No live fallback classifier.** If Groq is down, threads wait as `pending` instead of being classified by a weaker model.
 - **Reclassifying on every new message** costs one call per message rather than per thread, which uses up Groq's free limits faster. Only the latest message plus two short earlier ones are sent.
@@ -261,7 +249,7 @@ The labelled emails must be real and kept separate from any data used for fine-t
 
 1. Build the classifier adapter for gpt-oss-20b (structured output in the shape above), and check Groq's current free limits for the backfill.
 2. Add a card to the Vercel account (required for embeddings and for Laya in the evaluation).
-3. Implement the classification copy: typed number placeholders, amount ranges, link domains, and the server-computed facts. The existing light redaction module passes 65 tests, including 33 adversarial cases.
+3. Compute the server-side facts (`deadline_in_days`, `gmail_category`, `bulk_sender`). Redaction is done: 124 tests pass, including 33 adversarial cases and the coupon rule.
 4. Read thread history, `from_me`, Gmail category labels and bulk-mail headers during sync.
 5. Label 100 real threads (starting now, a few each day) and run the evaluation in section 8.
 6. Stretch: fine-tune Laya on Kaggle and host it on a Hugging Face Space.
