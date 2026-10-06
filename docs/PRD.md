@@ -218,8 +218,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 | --- | --- |
 | `users` | googleId, email, encryptedRefreshToken, sync {historyId, backfillPageToken, backfillDone, lastSyncedAt, lastError}, encryptedApiKeys {groq, jev}, settings, isDemo, expiresAt (demo users) |
 | `threads` | userId, threadId, latestMessageId, classification {category, categoryP, securityP, needsActionP, urgencyModel, dateKind, source, questionsVersion}, tier, dueAt, state (open/done/snoozed/dismissed), snoozeUntil |
-| `messages` | userId, gmailId, threadId, from, fromMe, date, subject, storedText (light or strict), gmailCategory, bulkSender |
-| `redactions` | messageId, type, detector, position (the secret itself is never stored) |
+| `messages` | userId, gmailId, threadId, from, fromMe, date, subject and body (redacted), strict, hidden (count per type, e.g. {OTP: 1, LINK: 3}; never the values), labelIds, bulkSender, deadlineAt, eventAt (both found while the raw text is in memory) |
 | `sender_rules` | userId, sender or domain, rule (category override, always/never show) |
 | `chunks` | userId, messageId, text, embedding, embeddingModel, date, from, category |
 | `conversations` | userId, messages [{role, text, citations}], updatedAt |
