@@ -90,6 +90,7 @@ Cloudflare Worker (cron) ──► /health every 10 min (keeps Render awake) and
    | --- | --- |
    | One-time codes (near code words, or anywhere in an OTP email) | `[OTP]` |
    | Card (Luhn check), Aadhaar (Verhoeff check), PAN, account number, PIN/CVV, password | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]`, `[PIN]`, `[PASSWORD]` |
+   | Phone numbers (with a `+` country code or after a phone label), IP addresses | `[PHONE]`, `[IP]` (personal, not secret: they do not make the email strict) |
    | Risky links (reset, login, tokens, shorteners) | `[LINK:domain]` |
    | Safe content links | Kept, tracking removed |
    | Amounts, dates, times, order numbers, coupon codes | Kept |
@@ -257,7 +258,7 @@ Every screen has loading, empty, success and error states.
 
 | What | How | Target |
 | --- | --- | --- |
-| Redaction | Unit tests (134 passing, including 33 adversarial cases) plus real security emails from the author's inbox | No secret reaches any AI request |
+| Redaction | Unit tests (141 passing, including 33 adversarial cases) plus real security emails from the author's inbox | No secret reaches any AI request |
 | Classification | 100 hand-labelled real threads; gpt-oss-20b vs Laya vs Jev (if available) vs fine-tuned Laya (stretch) | ≥ 85% category accuracy; accuracy, speed and cost compared |
 | Probabilities | Same set: how often answers given at 0.8 are actually right | Thresholds chosen from the data, not guessed |
 | Security-email recall | Same set | Close to 100%; every miss reviewed |

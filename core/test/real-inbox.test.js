@@ -39,3 +39,25 @@ test("CamelCase words in a link path are kept", () => {
     "Built by https://github.com/SharkStudios/StarBuddy/tree/main",
   );
 });
+
+const phones = {
+  "receipt label with +91": ["Mobile Number +919876543210", "Mobile Number [PHONE]"],
+  "spaced +91": ["Call us at +91 98765 43210.", "Call us at [PHONE]."],
+  "label without country code": ["Phone: 9876543210", "Phone: [PHONE]"],
+  "hyphenated international": ["WhatsApp +1-415-555-0100 for help", "WhatsApp [PHONE] for help"],
+  "mob. no.": ["Mob. No. 98765-43210", "Mob. No. [PHONE]"],
+};
+for (const [name, [input, expected]] of Object.entries(phones)) {
+  test(`phone hidden: ${name}`, () => assert.equal(redacted(input), expected));
+}
+
+test("unlabelled long numbers such as order IDs are kept", () => {
+  assert.equal(redacted("Order ID 402123456789 shipped"), "Order ID 402123456789 shipped");
+  assert.equal(redacted("Payment pay_Xk81Lm2QpZ captured"), "Payment pay_Xk81Lm2QpZ captured");
+});
+
+test("a phone number alone does not make the email strict", () => {
+  const out = redactEmail({ subject: "Receipt", body: "Mobile Number +919876543210. Read https://blog.example.com/tips" });
+  assert.equal(out.strict, false);
+  assert.equal(out.body, "Mobile Number [PHONE]. Read https://blog.example.com/tips");
+});

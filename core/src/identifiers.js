@@ -1,5 +1,7 @@
 // Finds Indian and payment identifiers: card numbers, Aadhaar, PAN, bank
-// account numbers, PINs/CVVs, passwords written in plain text, and IP addresses.
+// account numbers, PINs/CVVs, passwords written in plain text, and personal
+// details that are not secrets but should not reach an AI: IP addresses and
+// phone numbers.
 //
 // Checksums (Luhn for cards, Verhoeff for Aadhaar) separate real identifiers
 // from order and tracking numbers of the same length. About one random number
@@ -65,6 +67,12 @@ const PIN = /\b(?:cvv2?|cvc|m-?pin|t-?pin|pin)\b(?!\s*-?\s*code)\s*(?:is\b|[:=-]
 // enough to locate someone roughly. Not followed by another ".number".
 const OCTET = "(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)";
 const IP = new RegExp(`(?<![\\w.])${OCTET}(?:\\.${OCTET}){3}(?!\\.?\\w)`, "g");
+// Phone numbers: any number written with a "+" country code, or a 10–12 digit
+// number after a phone label. Unlabelled numbers are left alone, because order
+// and payment IDs look the same.
+const PHONE_INTERNATIONAL = /(?<![\w+])\+\d{1,3}(?:[\s-]?\d){7,12}(?![\w-])/g;
+const PHONE_LABELLED =
+  /\b(?:mobile|mob|phone|ph|tel|telephone|whatsapp|contact)\b\.?(?:\s*(?:no|num|number)\b\.?)?\s*[:#-]?\s*(\d(?:[\s-]?\d){9,11})(?![\w-])/gid;
 // A password after "is", ":" or "=". \b only understands ASCII, so the Hindi
 // word is matched on its own.
 const PASSWORD =
@@ -102,6 +110,8 @@ export function findIdentifiers(text) {
     ...spansFromMatches(text, AADHAAR, "AADHAAR", (m) => verhoeffValid(onlyDigits(m))),
     ...spansFromMatches(text, PAN, "PAN"),
     ...spansFromMatches(text, IP, "IP"),
+    ...spansFromMatches(text, PHONE_INTERNATIONAL, "PHONE"),
+    ...spansFromMatches(text, PHONE_LABELLED, "PHONE", () => true, 1),
     ...spansFromMatches(text, PIN, "PIN", () => true, 1),
     ...spansFromMatches(text, PASSWORD, "PASSWORD", looksLikePassword, 1),
   ];
