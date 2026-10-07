@@ -2,15 +2,22 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 const isAuthenticated = async (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ message: "Login required" });
+  }
+
+  let decoded;
   try {
-    const token = req.cookies.token;
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    // Only a problem with the token itself is a login problem.
+    const expired = err instanceof jwt.TokenExpiredError;
+    return res.status(401).json({ message: expired ? "Your login has expired. Please sign in again." : "Please sign in again." });
+  }
 
-    if (!token) {
-      return res.status(401).json({ message: "Login required" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+  try {
     const user = await User.findById(decoded.userId).select("-encryptedRefreshToken");
 
     if (!user) {
@@ -20,7 +27,8 @@ const isAuthenticated = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    // A database problem is not a bad login: the error middleware reports it.
+    next(err);
   }
 };
 

@@ -38,6 +38,7 @@ function Today() {
   const [today, setToday] = useState(null)
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
+  const [loginNeeded, setLoginNeeded] = useState(false)
   const [showMissed, setShowMissed] = useState(false)
   const [tab, setTab] = useState('today')
   // Bumped to fetch again on demand (after "Sync now" or an action).
@@ -63,9 +64,14 @@ function Today() {
           setToday(todayRes.data)
           setStatus(statusRes.data)
           setError(null)
+          setLoginNeeded(false)
         })
-        .catch(() => {
-          if (active) setError('Could not load your inbox. Check your connection and try again.')
+        .catch((err) => {
+          if (!active) return
+          // The server says what went wrong (an expired login, the database
+          // being unreachable); a missing reply means no connection.
+          setError(err.response?.data?.message ?? 'Could not reach Mailmind. Check your connection and try again.')
+          setLoginNeeded(err.response?.status === 401)
         })
 
     refresh()
@@ -176,7 +182,12 @@ function Today() {
 
       {error && (
         <p role="alert" className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
-          {error}
+          {error}{' '}
+          {loginNeeded && (
+            <a href="/api/auth/google" className="font-semibold underline underline-offset-2">
+              Sign in again
+            </a>
+          )}
         </p>
       )}
 
