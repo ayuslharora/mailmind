@@ -26,6 +26,8 @@ const requiredEnvVars = [
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
   "GOOGLE_REDIRECT_URI",
+  "GROQ_API_KEY",
+  "CRON_SECRET",
 ];
 
 const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);

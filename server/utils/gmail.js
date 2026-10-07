@@ -90,3 +90,40 @@ export async function getMessage(auth, id) {
       Boolean(header(data.payload, "List-Unsubscribe")) || /bulk|list/i.test(header(data.payload, "Precedence")),
   };
 }
+
+// Mail in spam or trash is treated as gone.
+const HIDDEN_LABELS = ["SPAM", "TRASH"];
+const isHidden = (labelIds = []) => labelIds.some((label) => HIDDEN_LABELS.includes(label));
+
+// What changed since Gmail's history bookmark: for every message touched, its
+// thread and whether it should now be stored (present) or removed. Events are
+// applied in order, so a message added and then trashed ends up removed.
+// Gmail answers 404 when the bookmark is too old (about a week).
+export async function listChanges(auth, startHistoryId) {
+  const gmail = google.gmail({ version: "v1", auth });
+  const changes = new Map();
+  const set = (message, present) => changes.set(message.id, { threadId: message.threadId, present });
+
+  let pageToken;
+  let historyId = startHistoryId;
+  do {
+    const { data } = await gmail.users.history.list({
+      userId: "me",
+      startHistoryId,
+      pageToken,
+      historyTypes: ["messageAdded", "messageDeleted", "labelAdded", "labelRemoved"],
+    });
+    for (const entry of data.history ?? []) {
+      for (const { message } of entry.messagesAdded ?? []) set(message, !isHidden(message.labelIds));
+      for (const { message } of entry.messagesDeleted ?? []) set(message, false);
+      for (const { message, labelIds } of entry.labelsAdded ?? []) if (isHidden(labelIds)) set(message, false);
+      for (const { message, labelIds } of entry.labelsRemoved ?? []) {
+        if (isHidden(labelIds)) set(message, !isHidden(message.labelIds));
+      }
+    }
+    historyId = data.historyId ?? historyId;
+    pageToken = data.nextPageToken;
+  } while (pageToken);
+
+  return { changes, historyId };
+}

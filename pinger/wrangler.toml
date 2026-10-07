@@ -2,9 +2,13 @@ name = "mailmind-pinger"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
 
-# Every 10 minutes: under Render's 15-minute idle limit, with room for cron jitter.
+# Every 10 minutes: ping /health (under Render's 15-minute idle limit, with
+# room for cron jitter). Every 15 minutes: start the Gmail sync.
 [triggers]
-crons = ["*/10 * * * *"]
+crons = ["*/10 * * * *", "*/15 * * * *"]
 
 [vars]
 TARGET_URL = "https://YOUR-RENDER-SERVICE.onrender.com/health"
+SYNC_URL = "https://YOUR-RENDER-SERVICE.onrender.com/api/sync/scheduled"
+
+# CRON_SECRET is a secret, not a var: npx wrangler secret put CRON_SECRET

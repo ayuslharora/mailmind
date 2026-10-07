@@ -1,6 +1,9 @@
 # mailmind-pinger
 
-A Cloudflare Worker that calls the API's `/health` endpoint every 10 minutes so the Render free-tier service never spins down.
+A Cloudflare Worker with two schedules:
+
+- every 10 minutes it calls the API's `/health` endpoint, so the Render free-tier service never spins down;
+- every 15 minutes it calls `POST /api/sync/scheduled`, which syncs Gmail for every user.
 
 ## Why a separate service
 
@@ -12,7 +15,9 @@ A Cloudflare Worker that calls the API's `/health` endpoint every 10 minutes so 
 ```bash
 cd pinger
 npx wrangler login
-# set TARGET_URL in wrangler.toml to the deployed API, e.g. https://mailmind-api.onrender.com/health
+# set TARGET_URL and SYNC_URL in wrangler.toml to the deployed API
+# use the same value as CRON_SECRET in the API's environment:
+npx wrangler secret put CRON_SECRET
 npx wrangler deploy
 ```
 
@@ -20,7 +25,8 @@ npx wrangler deploy
 
 ```bash
 npx wrangler dev --test-scheduled
-curl "http://localhost:8787/__scheduled?cron=*/10+*+*+*+*"
+curl "http://localhost:8787/__scheduled?cron=*/10+*+*+*+*"   # ping
+curl "http://localhost:8787/__scheduled?cron=*/15+*+*+*+*"   # sync
 ```
 
 ## Logs
@@ -29,7 +35,7 @@ curl "http://localhost:8787/__scheduled?cron=*/10+*+*+*+*"
 npx wrangler tail
 ```
 
-Each run logs `{ ok, status, ms }`. A large `ms` means the API was asleep when it was pinged.
+Each run logs `{ name, ok, status, ms }`. A large `ms` means the API was asleep when it was pinged.
 
 ## API side
 

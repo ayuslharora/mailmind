@@ -14,11 +14,15 @@ const SECURITY_P = 0.3;
 // The latest message and the two before it are what the classifier sees.
 const CONTEXT_MESSAGES = 3;
 
-// Marks threads with a new latest message as pending.
+// Marks threads with a new latest message as pending, and removes threads
+// whose messages were all deleted in Gmail.
 export async function updateThreads(userId, threadIds) {
   for (const threadId of new Set(threadIds)) {
     const latest = await Message.findOne({ userId, threadId }).sort({ date: -1 });
-    if (!latest) continue;
+    if (!latest) {
+      await Thread.deleteOne({ userId, threadId });
+      continue;
+    }
     const thread = await Thread.findOne({ userId, threadId });
     if (thread?.latestMessageId === latest.gmailId) continue;
     await Thread.updateOne(

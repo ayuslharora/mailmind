@@ -2,7 +2,7 @@ import { findDate, redactEmail } from "@mailmind/core";
 import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import { decrypt } from "./crypto.js";
-import { createOAuthClient, getMessage, getProfile, listMessagePage } from "./gmail.js";
+import { createOAuthClient, getMessage, getProfile, listChanges, listMessagePage } from "./gmail.js";
 import { classifyPending, updateThreads } from "./classifyThreads.js";
 
 // Last 30 days, without spam and trash. Sent mail is included for context.
@@ -57,6 +57,11 @@ export function toStoredMessage(userId, email, { strict = false } = {}) {
   };
 }
 
+const statusOf = (err) => err.code ?? err.status ?? err.response?.status;
+
+// Reads one email; null if it was deleted in Gmail in the meantime.
+const readMessage = (auth, id) => getMessage(auth, id).catch((err) => (statusOf(err) === 404 ? null : Promise.reject(err)));
+
 // Reads and stores the emails not stored yet. Returns their thread IDs.
 async function saveMessages(auth, userId, ids) {
   const stored = await Message.find({ userId, gmailId: { $in: ids } }, "gmailId");
@@ -65,7 +70,8 @@ async function saveMessages(auth, userId, ids) {
 
   const threadIds = [];
   for (let i = 0; i < newIds.length; i += BATCH_SIZE) {
-    const emails = await Promise.all(newIds.slice(i, i + BATCH_SIZE).map((id) => getMessage(auth, id)));
+    const emails = (await Promise.all(newIds.slice(i, i + BATCH_SIZE).map((id) => readMessage(auth, id)))).filter(Boolean);
+    if (emails.length === 0) continue;
     threadIds.push(...emails.map((email) => email.threadId));
     await Message.bulkWrite(
       emails.map((email) => ({
@@ -82,34 +88,78 @@ async function saveMessages(auth, userId, ids) {
 
 // Fetches the last 30 days page by page. Progress is saved after every page,
 // so if the server restarts, the next run carries on from the same page.
-export async function backfill(userId) {
+async function runBackfill(user, auth) {
+  const userId = user._id;
+
+  // Gmail's bookmark from before the backfill: incremental sync starts here,
+  // so mail that arrives during the backfill is not missed.
+  if (!user.sync?.historyId) {
+    const { historyId } = await getProfile(auth);
+    await User.updateOne({ _id: userId }, { "sync.historyId": historyId });
+  }
+
+  let pageToken = user.sync?.backfillPageToken ?? undefined;
+  do {
+    const page = await listMessagePage(auth, { query: BACKFILL_QUERY, pageToken, pageSize: PAGE_SIZE });
+    await updateThreads(userId, await saveMessages(auth, userId, page.ids));
+    // Not awaited: classification starts on the newest threads while older
+    // pages are still being fetched.
+    classifyPending(userId);
+    pageToken = page.nextPageToken;
+    await User.updateOne({ _id: userId }, { "sync.backfillPageToken": pageToken ?? null, "sync.lastError": null });
+  } while (pageToken);
+
+  await User.updateOne({ _id: userId }, { "sync.backfillDone": true, "sync.lastSyncedAt": new Date() });
+}
+
+// Fetches only what changed since the last sync: new mail is stored, mail
+// deleted, trashed or marked as spam in Gmail is removed.
+async function runChanges(user, auth) {
+  const userId = user._id;
+  const { changes, historyId } = await listChanges(auth, user.sync.historyId);
+
+  const presentIds = [...changes].filter(([, change]) => change.present).map(([id]) => id);
+  const goneIds = [...changes].filter(([, change]) => !change.present).map(([id]) => id);
+
+  const savedThreadIds = await saveMessages(auth, userId, presentIds);
+  const gone = await Message.find({ userId, gmailId: { $in: goneIds } }, "threadId");
+  await Message.deleteMany({ userId, gmailId: { $in: goneIds } });
+  await updateThreads(userId, [...savedThreadIds, ...gone.map((m) => m.threadId)]);
+
+  await User.updateOne(
+    { _id: userId },
+    { "sync.historyId": historyId, "sync.lastSyncedAt": new Date(), "sync.lastError": null },
+  );
+  classifyPending(userId);
+}
+
+// The one entry point: the 30-day backfill the first time, then only changes.
+export async function syncUser(userId) {
   const key = String(userId);
   if (running.has(key)) return;
   running.add(key);
 
   try {
     const user = await User.findById(userId);
+    if (!user?.encryptedRefreshToken) return;
     const auth = gmailAuthFor(user);
 
-    // Gmail's bookmark from before the backfill: incremental sync starts here,
-    // so mail that arrives during the backfill is not missed.
-    if (!user.sync?.historyId) {
-      const { historyId } = await getProfile(auth);
-      await User.updateOne({ _id: userId }, { "sync.historyId": historyId });
+    if (!user.sync?.backfillDone) {
+      await runBackfill(user, auth);
+      return;
     }
-
-    let pageToken = user.sync?.backfillPageToken ?? undefined;
-    do {
-      const page = await listMessagePage(auth, { query: BACKFILL_QUERY, pageToken, pageSize: PAGE_SIZE });
-      await updateThreads(userId, await saveMessages(auth, userId, page.ids));
-      // Not awaited: classification starts on the newest threads while
-      // older pages are still being fetched.
-      classifyPending(userId);
-      pageToken = page.nextPageToken;
-      await User.updateOne({ _id: userId }, { "sync.backfillPageToken": pageToken ?? null, "sync.lastError": null });
-    } while (pageToken);
-
-    await User.updateOne({ _id: userId }, { "sync.backfillDone": true, "sync.lastSyncedAt": new Date() });
+    try {
+      await runChanges(user, auth);
+    } catch (err) {
+      if (statusOf(err) !== 404) throw err;
+      // Gmail keeps about a week of history. Older bookmark: check the last
+      // 30 days again (stored emails are skipped) from a fresh bookmark.
+      await User.updateOne(
+        { _id: userId },
+        { "sync.historyId": null, "sync.backfillPageToken": null, "sync.backfillDone": false },
+      );
+      await runBackfill(await User.findById(userId), auth);
+    }
   } catch (err) {
     // invalid_grant: access was revoked, or Google's 7-day limit for apps in
     // testing ran out. The user has to sign in again.

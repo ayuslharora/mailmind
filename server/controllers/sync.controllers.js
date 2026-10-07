@@ -1,12 +1,14 @@
 import Message from "../models/message.model.js";
 import Thread from "../models/thread.model.js";
+import User from "../models/user.model.js";
+import crypto from "crypto";
 import { isClassifying } from "../utils/classifyThreads.js";
-import { backfill, isSyncing } from "../utils/sync.js";
+import { isSyncing, syncUser } from "../utils/sync.js";
 
 export const startSync = (req, res) => {
-  // Not awaited: the backfill runs in the background and the page polls
-  // the status route.
-  if (!isSyncing(req.user._id)) backfill(req.user._id);
+  // Not awaited: sync runs in the background and the page polls the status
+  // route. The first sync fetches 30 days; later ones only what changed.
+  if (!isSyncing(req.user._id)) syncUser(req.user._id);
   return res.status(202).json({ message: "Sync started" });
 };
 
@@ -26,4 +28,18 @@ export const getSyncStatus = async (req, res) => {
     lastSyncedAt,
     lastError,
   });
+};
+
+const sameSecret = (a = "", b = "") =>
+  a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+
+// Called every 15 minutes by the Cloudflare Worker (pinger/). Syncs every
+// user one after another, in the background.
+export const syncEveryone = async (req, res) => {
+  if (!sameSecret(req.get("x-cron-secret"), process.env.CRON_SECRET)) {
+    return res.status(401).json({ message: "Not allowed" });
+  }
+  const users = await User.find({ encryptedRefreshToken: { $exists: true }, "sync.lastError": { $ne: "reconnect" } }, "_id");
+  res.status(202).json({ message: "Sync started", users: users.length });
+  for (const user of users) await syncUser(user._id);
 };
