@@ -40,3 +40,20 @@ test("a deadline within a week is coming up", () => {
   const due = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
   assert.equal(place({ needsActionP: 0.2, dateKind: "deadline" }, { dueAt: due }), "comingUp");
 });
+
+test("the user's corrections win over the model", () => {
+  const promo = { category: "promos", needsActionP: 0.1 };
+  assert.equal(signals({ classification: { ...base, ...promo }, label: { category: "finance" } }, now).category, "finance");
+  assert.equal(signals({ classification: { ...base, ...promo }, senderCategory: "jobs" }, now).category, "jobs");
+  assert.equal(
+    signals({ classification: { ...base, ...promo }, label: { category: "finance" }, senderCategory: "jobs" }, now).category,
+    "finance",
+    "a correction on this thread beats a sender rule",
+  );
+  assert.equal(signals({ classification: { ...base, needsActionP: 0.95 }, label: { needsAction: false } }, now).needsAction, false);
+  assert.equal(signals({ classification: { ...base, needsActionP: 0.1 }, label: { needsAction: true } }, now).needsAction, true);
+});
+
+test("a sender rule that says promos takes the thread out of Needs action", () => {
+  assert.equal(signals({ classification: { ...base, needsActionP: 0.9 }, senderCategory: "promos" }, now).needsAction, false);
+});

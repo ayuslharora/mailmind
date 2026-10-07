@@ -7,8 +7,17 @@ import { NEEDS_ACTION_P, SECURITY_P } from "./classify.js";
 export const URGENT = 3;
 const COMING_UP_MS = 7 * 24 * 60 * 60 * 1000;
 
-// classification: the stored result; receivedAt: when the latest message came.
-export function signals({ classification: c, dueAt = null, receivedAt = null }, now = new Date()) {
+// The sender's email address, lowercased: "Prof <p@x.edu>" → "p@x.edu".
+export const senderAddress = (from = "") => (from.match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase();
+
+// classification: the stored result; receivedAt: when the latest message came;
+// label: the user's own correction; senderCategory: from a sender rule. The
+// user's choices win over the model.
+export function signals(
+  { classification: c, dueAt = null, receivedAt = null, label = null, senderCategory = null },
+  now = new Date(),
+) {
+  const category = label?.category ?? senderCategory ?? c.category;
   // A new-login or security alert deserves a look the day it arrives, even
   // if it was you. OTP emails (source "rules") are excluded: a code is
   // useless minutes later.
@@ -18,9 +27,10 @@ export function signals({ classification: c, dueAt = null, receivedAt = null }, 
   return {
     urgency: Math.round(live.urgency * 10) / 10,
     missed: live.missed,
+    category,
     // A promotion never needs action, even when Gmail's headers did not
     // confirm it.
-    needsAction: c.needsActionP >= NEEDS_ACTION_P && !c.promoCap && c.category !== "promos",
+    needsAction: label?.needsAction ?? (c.needsActionP >= NEEDS_ACTION_P && !c.promoCap && category !== "promos"),
   };
 }
 

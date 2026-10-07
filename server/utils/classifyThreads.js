@@ -34,7 +34,12 @@ export async function updateThreads(userId, threadIds) {
     if (thread?.latestMessageId === latest.gmailId) continue;
     await Thread.updateOne(
       { userId, threadId },
-      { $set: { latestMessageId: latest.gmailId, lastMessageAt: latest.date, status: "pending" } },
+      {
+        $set: { latestMessageId: latest.gmailId, lastMessageAt: latest.date, status: "pending", state: "open" },
+        // A new message opens a done or snoozed thread again, and the user's
+        // old "needs action" answer was about the previous message.
+        $unset: { snoozeUntil: "", "userLabel.needsAction": "" },
+      },
       { upsert: true },
     );
   }

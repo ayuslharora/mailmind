@@ -9,6 +9,7 @@ import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import syncRoutes from "./routes/sync.routes.js";
 import todayRoutes from "./routes/today.routes.js";
+import threadRoutes from "./routes/thread.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -59,6 +60,7 @@ app.use("/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/sync", syncRoutes);
 app.use("/api/today", todayRoutes);
+app.use("/api/threads", threadRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });

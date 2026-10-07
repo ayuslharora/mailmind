@@ -56,6 +56,23 @@ const threadSchema = new mongoose.Schema(
     // The deadline or event date, if the classifier says there is one.
     dueAt: Date,
     dueHasTime: Boolean,
+
+    // done and snoozed only change Mailmind; Gmail is never modified. A new
+    // message in the thread opens it again.
+    state: {
+      type: String,
+      enum: ["open", "done", "snoozed"],
+      default: "open",
+    },
+    snoozeUntil: Date,
+
+    // The user's own correction. It wins over the model, and doubles as a
+    // hand label for the classifier evaluation.
+    userLabel: {
+      category: String,
+      needsAction: Boolean,
+      labelledAt: Date,
+    },
   },
   { timestamps: true },
 );

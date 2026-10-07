@@ -1,6 +1,7 @@
 import Message from "../models/message.model.js";
+import SenderRule from "../models/senderRule.model.js";
 import Thread from "../models/thread.model.js";
-import { sectionOf, signals } from "../utils/today.js";
+import { sectionOf, senderAddress, signals } from "../utils/today.js";
 
 const FIRST_LINE_CHARS = 140;
 
@@ -15,7 +16,13 @@ export const getToday = async (req, res) => {
   const now = new Date();
   const userId = req.user._id;
 
-  const threads = await Thread.find({ userId, status: "classified" }).sort({ lastMessageAt: -1 });
+  // Done threads are hidden; snoozed ones come back when the snooze ends.
+  const threads = await Thread.find({
+    userId,
+    status: "classified",
+    $or: [{ state: { $in: ["open", null] } }, { state: "snoozed", snoozeUntil: { $lte: now } }],
+  }).sort({ lastMessageAt: -1 });
+  const senderRules = new Map((await SenderRule.find({ userId })).map((r) => [r.sender, r.category]));
   const latest = await Message.find({ userId, gmailId: { $in: threads.map((t) => t.latestMessageId) } });
   const messageById = new Map(latest.map((m) => [m.gmailId, m]));
 
@@ -26,7 +33,16 @@ export const getToday = async (req, res) => {
     const message = messageById.get(thread.latestMessageId);
     if (!message) continue;
     const c = thread.classification;
-    const live = signals({ classification: c, dueAt: thread.dueAt, receivedAt: message.date }, now);
+    const live = signals(
+      {
+        classification: c,
+        dueAt: thread.dueAt,
+        receivedAt: message.date,
+        label: thread.userLabel,
+        senderCategory: senderRules.get(senderAddress(message.from)),
+      },
+      now,
+    );
 
     const item = {
       threadId: thread.threadId,
@@ -35,7 +51,6 @@ export const getToday = async (req, res) => {
       from: senderName(message.from),
       fromMe: message.fromMe,
       date: message.date,
-      category: c.category,
       ...live,
       dueAt: thread.dueAt ?? null,
       dueHasTime: thread.dueHasTime ?? null,
@@ -44,7 +59,7 @@ export const getToday = async (req, res) => {
     };
 
     const section = sectionOf(item, now);
-    if (section === "rest") rest[c.category] = (rest[c.category] ?? 0) + 1;
+    if (section === "rest") rest[item.category] = (rest[item.category] ?? 0) + 1;
     else sections[section].push(item);
   }
 
