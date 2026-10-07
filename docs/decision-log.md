@@ -149,6 +149,7 @@ Lowest level is **light**, never "none": a wrong AI answer must not send a raw s
 | Sync | 30-day backfill, skips spam and trash, includes Sent mail for context, resumable page by page with a progress bar; then incremental sync via Gmail history every 15 minutes plus "Sync now"; deleted Gmail emails are removed; reconnect banner when the login expires |
 | Sign-in | One step: Google sign-in requests Gmail read access on the same screen; if the user unticks Gmail access, the app asks for it instead of breaking |
 | Demo mode | ~300 AI-generated, reviewed fake emails of an Indian student's inbox, saved as JSON with dates relative to today and correct labels (a test set too); processed once at deploy by the real pipeline; each visitor gets a private copy deleted after 24 hours |
+| Demo mode, revisited (7 October) | **Dropped** by the author to spend the time on the core workflows. Evaluators are added as Google test users and sign in with their own Gmail; the demo video covers the full flow. Risk: the guidelines ask for incognito access without extra permissions, so this is raised with the teacher |
 
 ## 12. Libraries
 

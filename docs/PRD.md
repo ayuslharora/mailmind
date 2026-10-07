@@ -38,7 +38,6 @@ Indian college students and early-career professionals whose Gmail mixes college
 - Ask your inbox: chat with follow-up questions, hybrid search, citations linking to Gmail
 - Coupon and promo codes kept searchable
 - Bring your own key for Groq (and optionally Jev); encryption of Gmail tokens and API keys; "Delete all my data"
-- Demo mode with a synthetic inbox and a private copy per visitor
 
 **Out of scope**
 
@@ -183,7 +182,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 | `mongoose` | MongoDB models; `$vectorSearch` aggregation |
 | `googleapis` | Google sign-in and Gmail API (read-only) |
 | `jsonwebtoken`, `cookie-parser` | Login as a signed JWT in an httpOnly cookie (the course repository's pattern) |
-| `helmet`, `cors`, `express-rate-limit` | Security headers, allowed origins, rate limiting (demo and Ask) |
+| `helmet`, `cors`, `express-rate-limit` | Security headers, allowed origins, rate limiting (Ask) |
 | `zod` | Request validation and structured-output schemas |
 | `dotenv` | Environment variables in local development |
 | `pino`, `pino-http` | Structured logging that never logs email text or keys |
@@ -217,7 +216,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 
 | Collection | Key fields |
 | --- | --- |
-| `users` | googleId, email, encryptedRefreshToken, sync {historyId, backfillPageToken, backfillDone, lastSyncedAt, lastError}, encryptedApiKeys {groq, jev}, settings, isDemo, expiresAt (demo users) |
+| `users` | googleId, email, encryptedRefreshToken, sync {historyId, backfillPageToken, backfillDone, lastSyncedAt, lastError}, encryptedApiKeys {groq, jev}, settings |
 | `threads` | userId, threadId, latestMessageId, classification {category, categoryP, securityP, needsActionP, urgencyModel, dateKind, source, questionsVersion}, tier, dueAt, state (open/done/snoozed/dismissed), snoozeUntil |
 | `messages` | userId, gmailId, threadId, from, fromMe, date, subject and body (redacted), strict, hidden (count per type, e.g. {OTP: 1, LINK: 3}; never the values), labelIds, bulkSender, deadlineAt, eventAt (both found while the raw text is in memory) |
 | `sender_rules` | userId, sender or domain, rule (category override, always/never show) |
@@ -231,7 +230,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 - **Only redacted text reaches AI services:** the classifier, the embeddings and RAG answers all receive the same redacted copy, so no secret reaches any of them. The classifier sees only the sender's domain. In the evaluation, Laya and Jev receive the same copy.
 - **Data policies:** each provider's data-use policy (retention and training) is checked and stated plainly in the README.
 - **Encrypted credentials:** Gmail refresh tokens and users' API keys, with AES-256-GCM and a master key in an environment variable. Email text is stored already redacted and not encrypted, so keyword search works.
-- **Authorisation:** every query is scoped to the logged-in user; tests check that one user cannot read another's data. Demo visitors are temporary users with their own data.
+- **Authorisation:** every query is scoped to the logged-in user; tests check that one user cannot read another's data.
 - **No secrets in Git:** `.env` is ignored; `.env.example` documents variables.
 - **Delete all my data** removes the user's emails, chunks, conversations, tokens and keys.
 - **Known limit:** the words of an email (names, personal content) can reach AI services; Mailmind protects secrets, not every private detail.
@@ -264,13 +263,12 @@ Every screen has loading, empty, success and error states.
 | Promotions | 20 marketing emails written to sound urgent | None appear under "Needs action" |
 | Deadlines and events | 25 unit tests (day-first dates, EOD, "by the 15th", times after dates, scores like 10/11 ignored) plus 25 real threads with dates | ≥ 90% correct |
 | RAG | 20 questions with known answers, including follow-ups | ≥ 80% correct, every answer cited |
-| Authorisation | Automated tests across two users and demo visitors | No cross-user access |
-| Demo inbox | Every fake email carries its correct label | Regression test for the whole pipeline |
+| Authorisation | Automated tests across two users | No cross-user access |
 
 ## 16. Deployment
 
 - **Front end:** Vercel (rewrites `/api/*` to Render). **API:** Render free tier. **Database:** MongoDB Atlas free tier. **Scheduler:** Cloudflare Worker.
-- **Evaluator access:** the deployed link opens in an incognito window with a **"Try the demo"** button. No Google account is needed. About 300 synthetic emails of an Indian student's inbox, with dates relative to today, are processed once at deployment by the real pipeline; each visitor gets a private copy deleted after 24 hours.
+- **Evaluator access:** evaluators' Google accounts are added as test users in Google Cloud (up to 100 allowed while the app is in testing); they sign in with their own Gmail. The demo video shows a full walkthrough on the author's inbox. *A synthetic-inbox demo mode was planned and dropped on 7 October (author's decision) to spend the time on the core workflows.*
 - Real Gmail works for accounts added as test users (Google allows up to 100 for unverified apps).
 
 ## 17. Timeline
@@ -278,16 +276,16 @@ Every screen has loading, empty, success and error states.
 | Dates | Milestone |
 | --- | --- |
 | 7–8 Oct | Repository and git, project skeleton, Google sign-in, first deployment of all services; Groq model check; start labelling real emails |
-| 9–11 Oct | Gmail backfill (resumable, threads, Sent mail), cleaning, demo inbox generation |
+| 9–11 Oct | Gmail backfill (resumable, threads, Sent mail), cleaning |
 | 12–14 Oct | Redaction and tests (identifiers, coupon rule), gpt-oss-20b classifier in the decision-model shape, promotion rules, storage tiers |
 | 15–16 Oct | Deadlines and urgency, Today view and actions, sender rules, Add to Calendar |
 | 17–19 Oct | RAG: chunking, embeddings, indexes, hybrid retrieval, cited answers, follow-ups, Gmail links |
-| 20–21 Oct | Incremental sync and deletions, scheduled sync, bring your own key, delete my data, demo copies per visitor |
+| 20–21 Oct | Incremental sync and deletions, scheduled sync, bring your own key, delete my data |
 | 22–23 Oct | Error and empty states, authorisation tests, classifier evaluation and report; fine-tuned Laya if time allows |
 | 24–25 Oct | README, architecture diagram, demo video |
 | 26–27 Oct | Buffer, incognito checks, submission |
 
-**If behind schedule, cut in this order:** snooze → sender rules → follow-up questions → RAG filters → fine-tuned Laya → Jev and Laya evaluation. Redaction, classification, Today view, basic RAG, demo mode and documentation are never cut.
+**If behind schedule, cut in this order:** snooze → sender rules → follow-up questions → RAG filters → fine-tuned Laya → Jev and Laya evaluation. Redaction, classification, Today view, basic RAG and documentation are never cut.
 
 ## 18. Risks
 
@@ -299,7 +297,7 @@ Every screen has loading, empty, success and error states.
 | Vercel AI Gateway requires a card on file, even for free models | No longer needed for the app: embeddings moved to Cloudflare Workers AI (free, no card); Vercel is only used for Laya in the evaluation |
 | Free tiers change (Vercel, Groq, Render, Atlas) | Every model sits behind an interface and can be swapped |
 | A secret slips through redaction | Rules-first design, strict copy for the AI, adversarial tests, tests on real emails |
-| Gmail login expires weekly in testing mode | Reconnect banner; demo mode unaffected |
+| Gmail login expires weekly in testing mode | Reconnect banner; evaluators may need to sign in again |
 | A college Google Workspace may block the app | Personal Gmail is fully supported; Workspace is best effort |
 | Atlas free tier limits the number of search indexes | Exactly two needed (vector and text) |
 | Scope for three weeks | Fixed cut order above |
@@ -307,7 +305,7 @@ Every screen has loading, empty, success and error states.
 ## 19. Questions for you
 
 1. **Scope:** are the four workflows (Connect & sync, Protect & classify, Triage, Ask) the right depth for the end-term project?
-2. **Evaluation access:** is demo mode with a synthetic inbox acceptable, or should I also add evaluators' Google accounts as test users?
+2. **Evaluation access:** the guidelines ask for access from an incognito window without extra permissions. Is it acceptable to add your Google account as a test user so you sign in with your own Gmail, together with the demo video?
 3. **AI services:** is it acceptable to rely on free tiers of external AI services (Groq, Cloudflare Workers AI embeddings, and Jev on a small shared OpenRouter credit), given each sits behind an interface and can be swapped?
 4. **Privacy design:** secrets are removed on the server before any AI call, and only credentials are encrypted at rest. Does this meet your expectations for handling personal email?
 5. **Anything missing** that you would expect to see?
