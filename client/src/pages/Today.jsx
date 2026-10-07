@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import axiosInstance from '../axiosCalls/axios'
 import Loading from '../components/Loading'
+import Digest from '../components/Digest'
 import ThreadCard from '../components/ThreadCard'
 import { useAuth } from '../context/AuthContext'
 import { formatAgo } from '../utils/format'
@@ -38,6 +39,7 @@ function Today() {
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
   const [showMissed, setShowMissed] = useState(false)
+  const [tab, setTab] = useState('today')
   // Bumped to fetch again on demand (after "Sync now" or an action).
   const [reloadKey, setReloadKey] = useState(0)
   // "Marked done · Undo": threadId is set when the action hid the thread.
@@ -105,7 +107,23 @@ function Today() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">Today</h1>
+        <div className="flex gap-4" role="tablist">
+          {[
+            ['today', 'Today'],
+            ['digest', 'Digest'],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => setTab(key)}
+              className={`text-2xl font-bold tracking-tight ${tab === key ? '' : 'text-gray-400 dark:text-gray-600'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-3 text-sm">
           <Link to="/ask" className="font-medium underline underline-offset-2">
             Ask your inbox
@@ -146,7 +164,9 @@ function Today() {
         </p>
       )}
 
-      {today && (
+      {tab === 'digest' && <Digest />}
+
+      {tab === 'today' && today && (
         <>
           {SECTIONS.map(({ key, title }) => (
             <Section key={key} title={title} items={today[key]} onAction={act} />

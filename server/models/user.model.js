@@ -36,6 +36,16 @@ const userSchema = new mongoose.Schema(
       lastSyncedAt: Date,
       lastError: String,
     },
+
+    // Today's briefing, kept so reopening the tab costs no AI call. Made
+    // again when the day changes or the items in it change.
+    digest: {
+      day: String,
+      key: String,
+      headline: String,
+      points: [{ _id: false, threadId: String, text: String }],
+      generatedAt: Date,
+    },
   },
   { timestamps: true },
 );

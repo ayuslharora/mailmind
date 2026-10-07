@@ -11,6 +11,7 @@ import syncRoutes from "./routes/sync.routes.js";
 import todayRoutes from "./routes/today.routes.js";
 import threadRoutes from "./routes/thread.routes.js";
 import askRoutes from "./routes/ask.routes.js";
+import digestRoutes from "./routes/digest.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -65,6 +66,7 @@ app.use("/api/sync", syncRoutes);
 app.use("/api/today", todayRoutes);
 app.use("/api/threads", threadRoutes);
 app.use("/api/ask", askRoutes);
+app.use("/api/digest", digestRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
