@@ -64,8 +64,8 @@ Express API (Render) ───────────────────�
       ├─ chrono-node                              deadlines from raw text, in memory
       ├─ OpenRouter ── Jev                        classification of the redacted copy (main)
       ├─ Groq ── gpt-oss-20b                      classification fallback, RAG answers, question rewriting
-      ├─ Vercel AI Gateway ── Qwen3 embeddings    embeddings of the stored (redacted) copy
-      │                   └─ Laya                 evaluation only (self-hosted Laya: stretch goal)
+      ├─ Cloudflare Workers AI ── bge-m3          embeddings of the stored (redacted) copy
+      ├─ Vercel AI Gateway ── Laya                evaluation only (self-hosted Laya: stretch goal)
 
 Cloudflare Worker (cron) ──► /health every 10 min (keeps Render awake) and the 15-minute sync
 ```
@@ -129,7 +129,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 
 **Indexing**
 - One chunk per message, starting with a header line (sender, subject, date); long emails split by paragraph (LangChain `RecursiveCharacterTextSplitter`, ~800 characters with overlap).
-- Embedded with `alibaba/qwen3-embedding-0.6b` through Vercel AI Gateway (LangChain `OpenAIEmbeddings` pointed at the gateway). The model name is stored with each vector.
+- Embedded with `@cf/baai/bge-m3` (1,024 dimensions, multilingual) on Cloudflare Workers AI, through its OpenAI-compatible endpoint (LangChain `OpenAIEmbeddings` pointed at it). The model name is stored with each vector.
 - MongoDB Atlas vector index and text index, filterable by user, date, sender and category. The index grows with every synced email.
 
 **Answering**
@@ -150,7 +150,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 | Gmail | Gmail API (`gmail.readonly`) | A month of mail, threads, labels and incremental history |
 | Classification | Jev (`typesafe/jev-1.13`) via OpenRouter; fallback `openai/gpt-oss-20b` on Groq | Jev agreed with the author on 16 of 17 disagreements and gives real probabilities; about $0.00004 per thread |
 | RAG answers and question rewriting | `openai/gpt-oss-20b` on Groq | Free key, fast, structured output |
-| Embeddings | `alibaba/qwen3-embedding-0.6b` via Vercel AI Gateway | Within the free monthly credit; multilingual; provider stores nothing and does not train |
+| Embeddings | `@cf/baai/bge-m3` on Cloudflare Workers AI | Free (10,000 neurons a day, about 9 million tokens), no card; Cloudflare does not train on or keep inputs; multilingual (Hindi too) |
 | Evaluation | Laya (Vercel AI Gateway), Jev (OpenRouter, if a key is available), fine-tuned Laya (stretch) | Compared with gpt-oss-20b on the same hand-labelled emails |
 | RAG framework | LangChain.js | Retrievers, splitters, chains and structured output |
 | Dates | chrono-node | Deterministic date parsing on the server |
@@ -197,7 +197,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 | `@langchain/textsplitters` | Chunking long emails |
 | `@langchain/mongodb` | `MongoDBAtlasVectorSearch`, pre-filtered by user |
 | `@langchain/groq` | `ChatGroq` for gpt-oss-20b: classification, answers, rewriting |
-| `@langchain/openai` | `OpenAIEmbeddings` pointed at Vercel AI Gateway for Qwen3 embeddings |
+| `@langchain/openai` | `OpenAIEmbeddings` pointed at Cloudflare Workers AI for bge-m3 embeddings |
 | Built-in `fetch` | Laya (Vercel `/v1/evaluate`) and Jev (OpenRouter) calls for the evaluation |
 | Built-in `crypto` | AES-256-GCM encryption of Gmail tokens and API keys |
 
@@ -228,7 +228,7 @@ The full reasoning is in `docs/classification-case-study.md`.
 
 - **Read-only Gmail access.** Mailmind cannot send, delete or change mail.
 - **Secrets never leave the API server.** Raw email text exists only in memory during processing; originals are never stored.
-- **Only redacted text reaches AI services:** the classifier, Qwen embeddings and RAG answers all receive the same redacted copy, so no secret reaches any of them. The classifier sees only the sender's domain. In the evaluation, Laya and Jev receive the same copy.
+- **Only redacted text reaches AI services:** the classifier, the embeddings and RAG answers all receive the same redacted copy, so no secret reaches any of them. The classifier sees only the sender's domain. In the evaluation, Laya and Jev receive the same copy.
 - **Data policies:** each provider's data-use policy (retention and training) is checked and stated plainly in the README.
 - **Encrypted credentials:** Gmail refresh tokens and users' API keys, with AES-256-GCM and a master key in an environment variable. Email text is stored already redacted and not encrypted, so keyword search works.
 - **Authorisation:** every query is scoped to the logged-in user; tests check that one user cannot read another's data. Demo visitors are temporary users with their own data.
@@ -296,7 +296,7 @@ Every screen has loading, empty, success and error states.
 | The probabilities from gpt-oss-20b are its own estimates, not calibrated like a decision model's | Thresholds tuned on the labelled set; the security threshold stays low so mistakes lead to stricter storage |
 | Groq's free tier allows 1,000 requests a day and 8,000 tokens a minute (measured 7 October): about 5–6 classifications a minute | One call at a time, throttled under 7,000 tokens a minute; threads (not messages) classified, newest first; OTP emails classified by rules without a call; on the daily limit the rest stay "sorting…" until the next run; users can add their own Groq key |
 | Laya is weak without fine-tuning (published zero-shot accuracy 0.362 on TypeSafe's typed-decisions benchmark, against 0.318 for random and 0.727 for Jev), may be limited to 512 tokens, and is free on Vercel only until 31 October 2026 | Not used in the live pipeline; evaluated only. A fine-tuned, self-hosted Laya is a stretch goal |
-| Vercel AI Gateway requires a card on file, even for free models | Needed for embeddings; added before RAG work starts |
+| Vercel AI Gateway requires a card on file, even for free models | No longer needed for the app: embeddings moved to Cloudflare Workers AI (free, no card); Vercel is only used for Laya in the evaluation |
 | Free tiers change (Vercel, Groq, Render, Atlas) | Every model sits behind an interface and can be swapped |
 | A secret slips through redaction | Rules-first design, strict copy for the AI, adversarial tests, tests on real emails |
 | Gmail login expires weekly in testing mode | Reconnect banner; demo mode unaffected |
@@ -308,6 +308,6 @@ Every screen has loading, empty, success and error states.
 
 1. **Scope:** are the four workflows (Connect & sync, Protect & classify, Triage, Ask) the right depth for the end-term project?
 2. **Evaluation access:** is demo mode with a synthetic inbox acceptable, or should I also add evaluators' Google accounts as test users?
-3. **AI services:** is it acceptable to rely on free tiers of external AI services (Groq, Qwen embeddings), given each sits behind an interface and can be swapped?
+3. **AI services:** is it acceptable to rely on free tiers of external AI services (Groq, Cloudflare Workers AI embeddings, and Jev on a small shared OpenRouter credit), given each sits behind an interface and can be swapped?
 4. **Privacy design:** secrets are removed on the server before any AI call, and only credentials are encrypted at rest. Does this meet your expectations for handling personal email?
 5. **Anything missing** that you would expect to see?

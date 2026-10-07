@@ -114,6 +114,7 @@ Lowest level is **light**, never "none": a wrong AI answer must not send a raw s
 | 4 | **No local models at all** | — | **Chosen.** An API model classifies the redacted copy; embeddings come from an API |
 | Embeddings | Groq | Groq offers no embedding models | Rejected |
 | Embeddings | **`alibaba/qwen3-embedding-0.6b` via Vercel AI Gateway** | Covered by the free $5/month credit (≈ $0.006/month for one inbox), multilingual, provider stores nothing and does not train | **Chosen** |
+| Embeddings | Qwen3 via Vercel needed a card on file. Gemini's free tier uses data "to improve our products" (rejected for privacy) | **`@cf/baai/bge-m3` on Cloudflare Workers AI** (7 October): free, no card, about 9 million tokens a day, Cloudflare neither trains on nor keeps inputs; tested: 1,024 dimensions, 0.6 s for three texts, and a question scored 0.61 against the right email and 0.41 against a promotion |
 | Answers | Llama on Groq | Llama models are now Enterprise-only on Groq | Changed |
 | Answers | **`openai/gpt-oss-20b` on Groq** | Free key confirmed working | **Chosen**; low reasoning effort for parsing, medium for answers |
 | Keep-alive | Pinger every 15 minutes, hosted on Render | Races Render's 15-minute sleep; a second always-on Render service exceeds the 750 free hours | **Cloudflare Worker every 10 minutes**; also triggers the 15-minute sync |
