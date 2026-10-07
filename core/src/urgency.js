@@ -10,15 +10,20 @@ const DATE_URGENCY = [
   { under: 7 * 24 * HOUR_MS, urgency: 2 },
 ];
 const PROMO_MAX_URGENCY = 1;
+const DAY_MS = 24 * HOUR_MS;
 
-// modelUrgency is the classifier's score (0–4); dueAt is the deadline or event
-// date, if any; promoCap is set when the classifier and Gmail's headers both
-// say the email is a promotion. A past date is "missed": it adds no urgency,
-// and the email stays in the Missed section until the user dismisses it.
-export function urgency({ modelUrgency = 0, dueAt = null, promoCap = false }, now = new Date()) {
+// modelUrgency is the classifier's score (0–4), judged when the email
+// arrived (receivedAt); it fades by one point a day, so a login alert is
+// urgent on the day it comes and not three days later. dueAt is the deadline
+// or event date, if any, and keeps an old email urgent as it gets close.
+// promoCap is set when the classifier and Gmail's headers both say the email
+// is a promotion. A past date is "missed": it adds no urgency.
+export function urgency({ modelUrgency = 0, dueAt = null, promoCap = false, receivedAt = null }, now = new Date()) {
   const timeLeft = dueAt ? dueAt.getTime() - now.getTime() : Infinity;
   const missed = timeLeft < 0;
   const dateUrgency = missed ? 0 : (DATE_URGENCY.find((step) => timeLeft < step.under)?.urgency ?? 0);
-  const value = Math.max(modelUrgency, dateUrgency);
+  const daysOld = receivedAt ? Math.max(0, Math.floor((now.getTime() - receivedAt.getTime()) / DAY_MS)) : 0;
+  const fadedModelUrgency = Math.max(0, Math.round((modelUrgency - daysOld) * 100) / 100);
+  const value = Math.max(fadedModelUrgency, dateUrgency);
   return { urgency: promoCap ? Math.min(value, PROMO_MAX_URGENCY) : value, missed };
 }
