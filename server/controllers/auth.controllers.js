@@ -2,6 +2,9 @@ import crypto from "crypto";
 import User from "../models/user.model.js";
 import generateToken from "../utils/generateToken.js";
 import { encrypt } from "../utils/crypto.js";
+import { isClassifying } from "../utils/classifyThreads.js";
+import { deleteAccount } from "../utils/deleteAccount.js";
+import { isSyncing } from "../utils/sync.js";
 import { createOAuthClient, GMAIL_SCOPES } from "../utils/gmail.js";
 
 // One step: Google sign-in and read-only Gmail access on the same screen.
@@ -83,4 +86,15 @@ export const getMe = (req, res) => {
 export const logoutUser = (req, res) => {
   res.clearCookie("token", cookieOptions);
   return res.status(200).json({ message: "Logged out" });
+};
+
+// "Delete all my data". Refused while mail is being fetched or sorted, so
+// a background job cannot write data back after it has been deleted.
+export const deleteMe = async (req, res) => {
+  if (isSyncing(req.user._id) || isClassifying(req.user._id)) {
+    return res.status(409).json({ message: "Your mail is still being fetched or sorted. Try again in a minute." });
+  }
+  const result = await deleteAccount(req.user._id);
+  res.clearCookie("token", cookieOptions);
+  return res.status(200).json({ message: "All your data was deleted", ...result });
 };

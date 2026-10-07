@@ -37,7 +37,8 @@ Indian college students and early-career professionals whose Gmail mixes college
 | Today view with done, snooze, corrections, sender rules, Add to Calendar | Built (plain interface; to be redesigned) |
 | Ask your inbox (RAG) with citations | Built; correct on every question tried on the author's inbox, including follow-ups, "summarize all emails from…" and questions the inbox cannot answer |
 | Automated tests | 211 passing (167 for redaction, dates and urgency; 44 for the server) |
-| Still to do | Deployment, front-end redesign, labelled evaluation report, README, demo video, "Delete all my data", bring your own key |
+| Daily digest tab; "Delete all my data" (also revokes Gmail access); security headers; rate limits on AI features and sign-in | Built, tested |
+| Still to do | Deployment, front-end redesign, labelled evaluation report, README, demo video, bring your own key |
 
 ## 6. Scope
 
@@ -135,9 +136,9 @@ Cloudflare Worker (cron) ──► /health every 10 minutes (keeps Render awake)
 
 ### 12.1 Libraries
 
-**Used now:** `express`, `mongoose`, `dotenv`, `cookie-parser`, `jsonwebtoken`, `googleapis`, `html-to-text`, `zod`, `chrono-node`, `@langchain/core`, `@langchain/groq`, `@langchain/openai`, `@langchain/textsplitters`; `react`, `react-dom`, `react-router-dom`, `axios`, `tailwindcss`; tooling `nodemon`, `eslint`, `wrangler`. Tests use Node's built-in test runner (`node:test`).
+**Used now:** `express`, `helmet`, `express-rate-limit`, `mongoose`, `dotenv`, `cookie-parser`, `jsonwebtoken`, `googleapis`, `html-to-text`, `zod`, `chrono-node`, `@langchain/core`, `@langchain/groq`, `@langchain/openai`, `@langchain/textsplitters`; `react`, `react-dom`, `react-router-dom`, `axios`, `tailwindcss`; tooling `nodemon`, `eslint`, `wrangler`. Tests use Node's built-in test runner (`node:test`).
 
-**Planned (added when the feature that needs them is built):** `helmet`, `cors`, `express-rate-limit` (deployment); `pino` (logs that never contain email text); `react-markdown`, `date-fns`, `lucide-react`, toast notifications (front-end redesign).
+**Planned (added when the feature that needs them is built):** `pino` (logs that never contain email text); `react-markdown`, `date-fns`, `lucide-react`, toast notifications (front-end redesign).
 
 ## 13. Data model
 
@@ -158,6 +159,8 @@ Cloudflare Worker (cron) ──► /health every 10 minutes (keeps Render awake)
 - **Encrypted credentials:** the Gmail refresh token is stored with AES-256-GCM (verified: the database holds only the encrypted form). Email text is stored redacted but not encrypted, so it can be searched.
 - **Login:** a signed token in an httpOnly cookie, as in the course repository. Every query is scoped to the logged-in user; tested: one user cannot read or change another user's emails.
 - **No secrets in Git:** `.env` is ignored and has never been committed; `.env.example` documents the variables.
+- **Delete all my data:** removes every message, conversation, search chunk and rule, revokes Mailmind's Gmail access at Google, and deletes the account (tested).
+- **Rate limits and headers:** AI features are limited per user and sign-in per address; `helmet` sets security headers.
 - **Known limit:** the words of an email (names, personal content) can reach the AI services. Mailmind protects secrets, not every private detail, and says so.
 
 ## 15. Error handling

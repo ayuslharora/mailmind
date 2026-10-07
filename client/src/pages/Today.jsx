@@ -94,6 +94,19 @@ function Today() {
     setReloadKey((k) => k + 1)
   }
 
+  const deleteEverything = async () => {
+    const sure = window.confirm(
+      'Delete all your data from Mailmind and remove its access to your Gmail? Your emails in Gmail are not touched. This cannot be undone.',
+    )
+    if (!sure) return
+    try {
+      await axiosInstance.delete('/auth/me')
+      window.location.assign('/')
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Could not delete your data. Please try again.')
+    }
+  }
+
   const syncNow = async () => {
     await axiosInstance.post('/sync')
     setReloadKey((k) => k + 1)
@@ -131,6 +144,9 @@ function Today() {
           <span className="text-gray-500 dark:text-gray-400">{user.email}</span>
           <button type="button" onClick={logout} className="underline underline-offset-2">
             Log out
+          </button>
+          <button type="button" onClick={deleteEverything} className="text-red-700 underline underline-offset-2 dark:text-red-300">
+            Delete all my data
           </button>
         </div>
       </header>
