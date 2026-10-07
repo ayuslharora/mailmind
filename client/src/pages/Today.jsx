@@ -7,6 +7,7 @@ import { formatAgo } from '../utils/format'
 
 // While mail is being fetched or sorted, the page refreshes itself.
 const REFRESH_MS = 10000
+const NOTICE_MS = 6000
 
 const SECTIONS = [
   { key: 'urgent', title: 'Urgent' },
@@ -14,7 +15,7 @@ const SECTIONS = [
   { key: 'comingUp', title: 'Coming up this week' },
 ]
 
-function Section({ title, items }) {
+function Section({ title, items, onAction }) {
   if (items.length === 0) return null
   return (
     <section className="mt-8">
@@ -23,7 +24,7 @@ function Section({ title, items }) {
       </h2>
       <ul className="mt-3 space-y-3">
         {items.map((item) => (
-          <ThreadCard key={item.threadId} item={item} />
+          <ThreadCard key={item.threadId} item={item} onAction={onAction} />
         ))}
       </ul>
     </section>
@@ -36,8 +37,16 @@ function Today() {
   const [status, setStatus] = useState(null)
   const [error, setError] = useState(null)
   const [showMissed, setShowMissed] = useState(false)
-  // Bumped to fetch again on demand (after "Sync now").
+  // Bumped to fetch again on demand (after "Sync now" or an action).
   const [reloadKey, setReloadKey] = useState(0)
+  // "Marked done · Undo": threadId is set when the action hid the thread.
+  const [notice, setNotice] = useState(null)
+
+  useEffect(() => {
+    if (!notice) return
+    const timer = setTimeout(() => setNotice(null), NOTICE_MS)
+    return () => clearTimeout(timer)
+  }, [notice])
 
   const busy = Boolean(status && (status.syncing || status.classifying || today?.sorting > 0))
 
@@ -63,6 +72,24 @@ function Today() {
       if (timer) clearInterval(timer)
     }
   }, [busy, reloadKey])
+
+  const act = async (item, changes, text) => {
+    try {
+      await axiosInstance.patch(`/threads/${item.threadId}`, changes)
+      const hidden = changes.state === 'done' || changes.snoozeUntil
+      setNotice({ text, threadId: hidden ? item.threadId : null })
+      setReloadKey((k) => k + 1)
+    } catch {
+      setError('Could not save that change. Please try again.')
+    }
+  }
+
+  const undo = async () => {
+    const { threadId } = notice
+    setNotice(null)
+    await axiosInstance.patch(`/threads/${threadId}`, { state: 'open' })
+    setReloadKey((k) => k + 1)
+  }
 
   const syncNow = async () => {
     await axiosInstance.post('/sync')
@@ -118,7 +145,7 @@ function Today() {
       {today && (
         <>
           {SECTIONS.map(({ key, title }) => (
-            <Section key={key} title={title} items={today[key]} />
+            <Section key={key} title={title} items={today[key]} onAction={act} />
           ))}
 
           {sectionsEmpty && (
@@ -150,13 +177,27 @@ function Today() {
               {showMissed && (
                 <ul className="mt-3 space-y-3 opacity-80">
                   {today.missed.map((item) => (
-                    <ThreadCard key={item.threadId} item={item} />
+                    <ThreadCard key={item.threadId} item={item} onAction={act} />
                   ))}
                 </ul>
               )}
             </section>
           )}
         </>
+      )}
+
+      {notice && (
+        <div
+          role="status"
+          className="fixed inset-x-0 bottom-4 mx-auto flex w-fit items-center gap-4 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white shadow-lg dark:bg-gray-100 dark:text-gray-900"
+        >
+          {notice.text}
+          {notice.threadId && (
+            <button type="button" onClick={undo} className="font-semibold underline underline-offset-2">
+              Undo
+            </button>
+          )}
+        </div>
       )}
     </main>
   )
