@@ -1,9 +1,9 @@
 import { urgency } from "@mailmind/core";
 import Message from "../models/message.model.js";
 import Thread from "../models/thread.model.js";
+import { NEEDS_ACTION_P } from "../utils/classify.js";
 
 const URGENT = 3;
-const NEEDS_ACTION_P = 0.6;
 const COMING_UP_MS = 7 * 24 * 60 * 60 * 1000;
 const FIRST_LINE_CHARS = 140;
 

@@ -5,6 +5,11 @@
 // Raised whenever the questions change; older results are classified again.
 export const QUESTIONS_VERSION = 3;
 
+// Thresholds on the classifier's probabilities. Security is deliberately low:
+// a false alarm only stores a more strictly redacted copy.
+export const SECURITY_P = 0.3;
+export const NEEDS_ACTION_P = 0.6;
+
 export const CATEGORIES = ["academic", "jobs", "finance", "personal", "notifications", "promos"];
 export const URGENCY_LEVELS = ["ignore", "sometime", "this_week", "today", "immediately"];
 export const DATE_KINDS = ["deadline", "event", "none"];

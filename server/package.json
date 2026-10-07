@@ -8,7 +8,8 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "check-redaction": "node scripts/check-redaction.js",
-    "test": "node --test"
+    "test": "node --test",
+    "compare-classifiers": "node scripts/compare-classifiers.js"
   },
   "dependencies": {
     "@langchain/core": "^1.2.17",

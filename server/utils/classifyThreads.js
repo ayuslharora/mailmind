@@ -3,14 +3,18 @@
 import Message from "../models/message.model.js";
 import Thread from "../models/thread.model.js";
 import User from "../models/user.model.js";
-import { applyPromoRules, buildState, pickDueAt, QUESTIONS_VERSION, rulesClassification } from "./classify.js";
+import {
+  applyPromoRules,
+  buildState,
+  pickDueAt,
+  QUESTIONS_VERSION,
+  rulesClassification,
+  SECURITY_P,
+} from "./classify.js";
 import { classifyState, DailyLimitError, SOURCE } from "./classifier.js";
 import { getMessage } from "./gmail.js";
 import { gmailAuthFor, toStoredMessage } from "./sync.js";
 
-// At or above this, the thread is treated as a security email and stored
-// strictly. Deliberately low: a false alarm only hides more.
-const SECURITY_P = 0.3;
 // The latest message and the two before it are what the classifier sees.
 const CONTEXT_MESSAGES = 3;
 
