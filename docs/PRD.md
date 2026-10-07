@@ -1,14 +1,14 @@
 # Mailmind — Product Requirements Document
 
-**Author:** Ayush · **Date:** 7 October 2026 · **Status:** Final design, for approval · **Submission deadline:** 27 October 2026
+**Author:** Ayush · **Updated:** 7 October 2026 · **Status:** Design approved in principle; core built and tested on a real inbox · **Submission deadline:** 27 October 2026
 
 ## 1. Summary
 
-Mailmind is a web app that reads a user's Gmail, removes secrets such as OTPs, card numbers and password-reset links before any AI model sees the mail, and then shows what is urgent, collects deadlines and events, and answers questions about the inbox in a chat, with links to the exact Gmail messages.
+Mailmind is a web app that reads a user's Gmail, removes secrets such as OTPs, card numbers and password-reset links before any AI model sees the mail, and then shows what needs attention today, collects deadlines and events, and answers questions about the inbox in a chat, with links to the exact Gmail messages.
 
 ## 2. Problem
 
-- Most of an inbox is promotions, newsletters and automated notifications. The few emails that matter (an assignment deadline, a recruiter reply, a bill) get buried.
+- Most of an inbox is promotions, newsletters and automated notifications. The few emails that matter (an assignment deadline, a payment problem, a recruiter reply) get buried.
 - Finding an old email means guessing the exact keywords Gmail search needs.
 - AI tools could help, but giving them an inbox exposes OTPs, card numbers, Aadhaar/PAN and login links.
 
@@ -20,292 +20,210 @@ Indian college students and early-career professionals whose Gmail mixes college
 
 | # | Workflow | What the user does | What the system does |
 | --- | --- | --- | --- |
-| 1 | **Connect & sync** | Signs in with Google | Requests Gmail read access on the same screen; backfills 30 days with a progress bar; then syncs new mail every 15 minutes and on "Sync now" |
-| 2 | **Protect & classify** | Nothing | Redacts each thread, classifies it with an AI model, finds deadlines, stores a safe copy |
-| 3 | **Triage** | Opens the Today view; marks items done, snoozes, corrects categories, adds dates to the calendar | Ranks threads by urgency, recomputed every time the page loads |
-| 4 | **Ask your inbox** | Chats with the inbox, including follow-up questions | Hybrid retrieval over the user's emails; answers cite the exact Gmail messages; says so when it cannot find an answer |
+| 1 | **Connect & sync** | Signs in with Google | Asks for read-only Gmail access on the same screen; fetches the last 30 days; then fetches only new or changed mail every 15 minutes and on "Sync now" |
+| 2 | **Protect & classify** | Nothing | Redacts each email on the server, classifies each conversation with an AI model, finds deadlines and events, stores only the redacted copy |
+| 3 | **Triage** | Opens the Today view; marks items done, snoozes, corrects mistakes, adds dates to Google Calendar | Ranks conversations by urgency, recomputed every time the page loads |
+| 4 | **Ask your inbox** | Asks questions in a chat, including follow-ups and "summarize all emails from…" | Searches only that user's emails by meaning and by keywords; answers cite the exact Gmail messages; says so when the inbox does not contain the answer |
 
-## 5. Scope
+## 5. Progress so far (7 October)
+
+| Area | Status |
+| --- | --- |
+| Google sign-in with read-only Gmail access; encrypted refresh token | Built, tested live |
+| 30-day backfill (resumable), incremental sync, removal of mail deleted in Gmail, 15-minute schedule | Built, tested live (deletion tested with simulated Gmail history) |
+| Redaction: OTPs, cards, Aadhaar, PAN, account numbers, PINs, passwords, phone numbers, IP addresses, risky links; coupon codes kept | Built; 141 tests; checked on 70 real emails: **no leaks found**, 8 bugs found and fixed |
+| Deadline and event dates | Built; 25 tests; checked on 17 real emails with dates, 5 bugs found and fixed |
+| Classification with Jev, fallback gpt-oss-20b | Built; compared live on 76 real conversations (section 8) |
+| Today view with done, snooze, corrections, sender rules, Add to Calendar | Built (plain interface; to be redesigned) |
+| Ask your inbox (RAG) with citations | Built; correct on every question tried on the author's inbox, including follow-ups, "summarize all emails from…" and questions the inbox cannot answer |
+| Automated tests | 211 passing (167 for redaction, dates and urgency; 44 for the server) |
+| Still to do | Deployment, front-end redesign, labelled evaluation report, README, demo video, "Delete all my data", bring your own key |
+
+## 6. Scope
 
 **In scope for 27 October**
 
 - One-step Google sign-in with read-only Gmail access
-- 30-day backfill (resumable), incremental sync every 15 minutes, "Sync now", removal of emails deleted in Gmail
-- Redaction on the server before any AI call; redaction log
-- Thread classification with Jev (category, security, needs action, urgency, deadline/event), with gpt-oss-20b on Groq as the free fallback; both return a probability for every answer in the same shape
-- Deadline and event extraction; urgency that rises as a date approaches
-- Today view: done, snooze, category correction with sender rules, Add to Calendar (pre-filled Google Calendar link), open in Gmail
-- Ask your inbox: chat with follow-up questions, hybrid search, citations linking to Gmail
-- Coupon and promo codes kept searchable
-- Bring your own key for Groq (and optionally Jev); encryption of Gmail tokens and API keys; "Delete all my data"
+- 30-day backfill, incremental sync every 15 minutes, "Sync now", removal of emails deleted in Gmail
+- Redaction on the server before any AI call, with a count of what was hidden in each email
+- Conversation classification (category, security, needs action, urgency, deadline/event) with probabilities
+- Deadline and event extraction; urgency that rises as a date approaches and fades as an email gets older
+- Today view: done, snooze, corrections (optionally for every email from a sender), Add to Calendar, open in Gmail
+- Ask your inbox: follow-up questions, sender and date filters, hybrid search, citations linking to Gmail
+- "Delete all my data"; bring your own Groq key
 
-**Out of scope**
+**Out of scope:** sending, deleting or changing email; writing to Google Calendar (a pre-filled link is used instead); other email providers; attachments; a browser extension (a possible future front end on the same backend).
 
-- Sending, deleting or modifying email; Google Calendar API writes; email providers other than Gmail; attachments; browser extension (future front end on the same backend)
+**Dropped:** a demo mode with a synthetic inbox (decided on 7 October, to spend the time on the core workflows). How evaluators get in is question 2 in section 19.
 
-**Stretch goal**
+**Stretch goal:** fine-tuning Laya, an open-weight decision model, on hand-labelled emails and hosting it for free, as a third classifier in the comparison.
 
-- Fine-tuned Laya: Laya's weights are open (Apache 2.0), so it can be fine-tuned for free on Kaggle with hand-labelled real emails and self-hosted on a free Hugging Face Space. Attempted only once the core is done; compared against gpt-oss-20b in the classification evaluation
-
-**Future idea**
-
-- Placeholder restoration: the AI only sees placeholders such as `[COUPON_1]`, and the server puts the real value back on the user's screen. Not needed now: coupon codes are already kept, and every answer links to the exact Gmail message, so any hidden value (such as an OTP) is one click away
-
-## 6. Architecture
+## 7. Architecture
 
 ```
 React client (Vercel) ── /api/* rewritten to Render (same origin, first-party cookie)
       │
-Express API (Render) ─────────────────────────► MongoDB Atlas (vector index + text index)
-      │  no AI models run here
-      ├─ Gmail API (read-only)                    sync, threads, Sent mail, history, labels
-      ├─ Cleaning + redaction                     raw text only in memory
-      ├─ chrono-node                              deadlines from raw text, in memory
-      ├─ OpenRouter ── Jev                        classification of the redacted copy (main)
-      ├─ Groq ── gpt-oss-20b                      classification fallback, RAG answers, question rewriting
-      ├─ Cloudflare Workers AI ── bge-m3          embeddings of the stored (redacted) copy
-      ├─ Vercel AI Gateway ── Laya                evaluation only (self-hosted Laya: stretch goal)
+Express API (Render) ─────────────────────────► MongoDB Atlas (data + vector index + text index)
+      │  no AI models run on this server
+      ├─ Gmail API (read-only)                    sync, history, labels
+      ├─ Redaction (own code, tested)             raw text only in memory
+      ├─ chrono-node + own rules                  deadline and event dates, in memory
+      ├─ OpenRouter ── Jev                        classification (main)
+      ├─ Groq ── gpt-oss-20b / gpt-oss-120b       classification fallback, chat answers
+      └─ Cloudflare Workers AI ── bge-m3          embeddings for search
 
-Cloudflare Worker (cron) ──► /health every 10 min (keeps Render awake) and the 15-minute sync
+Cloudflare Worker (cron) ──► /health every 10 minutes (keeps Render awake) and the 15-minute sync
 ```
 
 **Key design decisions**
 
-- **Redact before every AI call.** Each model only receives redacted text; secrets never leave the API server.
-- **Rules first, AI second.** Deterministic rules decide whenever they are sure; the AI decides only uncertain cases, and can only make redaction stricter.
-- **Fail closed.** Any failure leads to a safer state: a thread is retried later rather than processed with less redaction.
-- **No local AI models.** All models are called through APIs, so the free 512 MB API server stays small and fast.
-- **Classifier behind one interface.** The classifier receives the questions in Jev's format and returns answers in Jev's shape: a probability for yes/no questions, a probability for each option in a choice, and a value for a score. gpt-oss-20b is prompted to answer in exactly this shape, so replacing it with Jev or a fine-tuned Laya only means writing a new adapter.
-- **Original emails are never stored.** Opening an email fetches it live from Gmail.
+- **Redact before every AI call.** Every model only receives redacted text; secrets never leave the API server.
+- **Original emails are never stored.** Only the redacted copy is kept; opening an email goes to Gmail.
+- **Rules first, AI second.** Rules decide when they are sure (an OTP email needs no AI call); the AI can only make redaction stricter, never looser.
+- **Fail safe.** Any failure leaves a conversation "sorting…" to be retried; nothing is ever stored with less redaction.
+- **Every model behind one interface.** Classifiers answer in the same shape, so Jev, gpt-oss-20b or a fine-tuned Laya can be swapped by changing one adapter.
+- **One database.** Messages, conversations and search vectors live in the same MongoDB Atlas database, so every search is filtered to the logged-in user inside the database, and deleting an email deletes it everywhere.
 
-## 7. Pipeline: from email to classification
+## 8. Classification
 
-1. **Fetch:** Gmail API, read-only, last 30 days (spam and trash skipped), including Sent mail for context.
-2. **Clean:** HTML to text, quoted replies removed, grouped by thread.
-3. **Build the thread context:** the latest message (first ~1,200 and last ~300 characters), the two earlier messages trimmed to ~300 characters, and a `from_me` flag on each.
-4. **Redact:** the same redacted copy is classified, stored and later used by RAG (section 8). There is no separate copy for classification.
+1. **Context:** the latest message of the conversation (its start and end), the two messages before it, who sent each (only the sender's domain is sent to the model), Gmail's own tab, whether it came from a mailing tool, and how many days until a date found in it.
+2. **Rules first:** an email that says it contains a one-time code is a security notice and needs no AI call.
+3. **Model:** Jev (TypeSafe's decision model, through OpenRouter) answers five questions with probabilities: security email?, category (Academic, Jobs, Finance, Personal, Notifications, Promos), needs action?, urgency (0–4), date kind (deadline / event / none). If Jev is unavailable, gpt-oss-20b on Groq answers in the same shape.
+4. **After the model:** a promotion that claims to be urgent is capped when Gmail's headers agree it is a promotion; a promotion never appears under "Needs action". A conversation the model thinks is a security email is read again from Gmail and stored with stricter redaction.
 
-   | Content | Treatment |
-   | --- | --- |
-   | One-time codes (near code words, or anywhere in an OTP email) | `[OTP]` |
-   | Card (Luhn check), Aadhaar (Verhoeff check), PAN, account number, PIN/CVV, password | `[CARD]`, `[AADHAAR]`, `[PAN]`, `[ACCOUNT]`, `[PIN]`, `[PASSWORD]` |
-   | Phone numbers (with a `+` country code or after a phone label), IP addresses | `[PHONE]`, `[IP]` (personal, not secret: they do not make the email strict) |
-   | Risky links (reset, login, tokens, shorteners) | `[LINK:domain]` |
-   | Safe content links | Kept, tracking removed |
-   | Amounts, dates, times, order numbers, coupon codes | Kept |
-   | Sender | Domain only |
+**Why Jev (measured on the author's inbox, 7 October):** gpt-oss-20b answered exactly 0 or 1 for 83% of its yes/no probabilities, so its thresholds meant little; Jev gave real probabilities (0% exactly 0 or 1). On the 17 conversations where the two disagreed, the author judged Jev right on 16. A full classification costs about $0.00004 with Jev. Details: `docs/classification-case-study.md`.
 
-5. **Add facts computed on the server:** `deadline_in_days` (chrono-node), Gmail's own category label, and whether the email is bulk mail (`List-Unsubscribe` / `Precedence: bulk`).
-6. **One Jev call** (TypeSafe's decision model, through OpenRouter), falling back to gpt-oss-20b on Groq if Jev is unavailable, answering five questions: security email? (yes/no), category (Academic, Jobs, Finance, Personal, Notifications, Promos), needs action? (yes/no), urgency (0–4), date kind (deadline / event / none). Every answer comes with a probability, in the same shape Jev returns. These probabilities are the model's own estimates, not calibrated values, so the thresholds are tuned on the hand-labelled evaluation set.
-7. **On failure:** invalid output is retried once; if Groq is unavailable or rate-limited, the thread is marked pending and retried later. It is never processed with less redaction.
-8. **Post-classification rules:** if the classifier and Gmail's headers both say promotion, urgency is capped and the thread never appears under "Needs action".
+## 9. Storage, dates and urgency
 
-The full reasoning is in `docs/classification-case-study.md`.
+- **Stored copy:** "light" (only secrets hidden; amounts, dates, coupon codes and safe links kept) or "strict" (every code-shaped number and every link hidden) when a secret was found or the model flags a security email.
+- **Dates:** read from the original text while it is in memory, in Indian time, day first (10/11 is 10 November), relative to when the email was sent; "EOD", "by the 15th", times after dates and US time zones handled; dates inside links, "now" and casual phrases such as "Today's best…" ignored.
+- **Urgency is never stored.** On every page load: the model's urgency fades by one point a day after the email arrived; a deadline raises it as it approaches (4 under one day, 3 under three days, 2 under a week); the higher of the two counts. A new-login or security alert is urgent on the day it arrives.
 
-## 8. Storage, deadlines and urgency
+## 10. Today view
 
-**Stored copy.** Rules first:
+- Sections: **Urgent**, **Needs action**, **Coming up this week**, a summary line counting everything else by category, and **Missed** at the bottom (only deadlines that needed action and can no longer be met; an overdue bill stays under Needs action, because it can still be paid).
+- Each item: subject, first line, sender, date, category, "Due Fri, 11:59 pm" or "Event Fri".
+- Actions: Done (with Undo), Snooze (tomorrow, next Monday, or a chosen day), "Not right?" (change the category, optionally for all email from that sender; say whether it needs action), Add to Calendar, Open in Gmail. A new reply reopens a done or snoozed conversation. Gmail itself is never changed.
+- Every correction overrides the model and is saved as a hand label for the evaluation.
 
-| Rules | Security probability | Stored copy |
-| --- | --- | --- |
-| Sure there is a secret (strong OTP word, card, Aadhaar, PAN) | ignored | **Strict:** every code-shaped number and every link hidden |
-| Unsure, or nothing found | ≥ 0.3 | Strict |
-| Unsure, or nothing found | < 0.3 | **Light:** only secrets hidden; safe content links (with tracking removed), dates, amounts and coupon codes kept |
+## 11. Ask your inbox (RAG)
 
-**Deadlines and events.** When the classifier reports a deadline or event, chrono-node reads the raw text in memory, using the email's sent date as the reference and Indian Standard Time, and picks the date nearest words such as *due, by, last date* (or *on, at, exam, interview* for events). Dates are read day first (10/11 is 10 November); a date without a time means the end of that day; dates before the email was sent are ignored. Two additions to chrono-node cover "EOD" and "by the 15th". Only the date and its kind are stored.
+**Indexing:** each stored (redacted) email is split into chunks of about 800 characters, each starting with a line naming the sender, subject and date, and embedded with bge-m3 (1,024 dimensions, multilingual) on Cloudflare Workers AI. New mail is indexed after every sync; mail deleted in Gmail is removed from the index.
 
-**Urgency** is never stored. It is computed each time the Today view loads:
-`urgency = max(classifier urgency, date urgency)`, where the date urgency is 4 if under 1 day remains, 3 under 3 days, 2 under 7 days. Missed deadlines stay until the user dismisses them.
+**Answering:**
+1. **Understand:** one model call rewrites a follow-up into a standalone question ("when did that happen?" → "When did my Google One payment fail?") and pulls out a sender, a date range and whether the user wants every matching email.
+2. **Filter:** the sender words are matched to real senders in that mailbox, allowing typos ("ayus arora" finds "Ayush Arora").
+3. **Retrieve:** a meaning search (vector index) and a keyword search (text index), both filtered to the user, sender and dates inside Atlas, merged with Reciprocal Rank Fusion; the top 6 chunks are kept. "Summarize / list / how many" questions instead read one chunk from every matching email (up to 15).
+4. **Answer:** gpt-oss-20b answers only from the numbered sources and lists the ones it used.
+5. **Check:** citations of sources that were not given are dropped; with no valid citation the answer is "I couldn't find this in your inbox". Hidden values (such as an OTP) are never guessed; the answer links to the email instead.
 
-## 9. Today view
-
-- Sections: **Urgent**, **Needs action**, **Coming up this week** (deadlines and events), a summary line for everything else, and **Missed** shown low on the page.
-- Each item: subject, first line, sender, date, kind label ("Due Fri" / "Event Fri").
-- Actions: done, snooze (tomorrow / next week / pick a date), change category (optionally for every email from that sender, creating a sender rule), open in Gmail, Add to Calendar.
-- "Done" and "snooze" only change state inside Mailmind; Gmail is never modified.
-
-## 10. Ask your inbox (RAG)
-
-**Indexing**
-- One chunk per message, starting with a header line (sender, subject, date); long emails split by paragraph (LangChain `RecursiveCharacterTextSplitter`, ~800 characters with overlap).
-- Embedded with `@cf/baai/bge-m3` (1,024 dimensions, multilingual) on Cloudflare Workers AI, through its OpenAI-compatible endpoint (LangChain `OpenAIEmbeddings` pointed at it). The model name is stored with each vector.
-- MongoDB Atlas vector index and text index, filterable by user, date, sender and category. The index grows with every synced email.
-
-**Answering**
-1. **Rewrite:** a follow-up question is rewritten into a standalone question using recent conversation history (gpt-oss-20b, low reasoning effort).
-2. **Parse:** filters such as sender, time range and category extracted as structured output. *Not built yet (YAGNI): the header line on every chunk (sender, subject, date) already lets search match these; added only if the evaluation shows a need.*
-3. **Retrieve:** Atlas `$vectorSearch` (top 20) and `$search` keyword search (top 20), each filtered by the logged-in user inside Atlas, merged with Reciprocal Rank Fusion in about ten lines of code (`utils/retrieve.js`); top 6 kept.
-4. **Answer:** gpt-oss-20b returns `{ found, answer, citations }`.
-5. **Verify:** citations not among the retrieved emails are removed; with no valid citation the app answers "I couldn't find this in your inbox".
-6. **Show:** the answer with citation cards linking to the exact Gmail message, including the account (`authuser`) so the correct Gmail account opens.
-
-## 11. Tech stack
+## 12. Tech stack
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Front end | React (Vite) on Vercel | Dashboard and chat UI; Vercel rewrites keep cookies first-party |
-| API | Node.js + Express on Render | One language end to end; Gmail and AI SDK support |
-| Database | MongoDB Atlas (free tier) | Flexible email documents; vector and text search in one place |
-| Gmail | Gmail API (`gmail.readonly`) | A month of mail, threads, labels and incremental history |
-| Classification | Jev (`typesafe/jev-1.13`) via OpenRouter; fallback `openai/gpt-oss-20b` on Groq | Jev agreed with the author on 16 of 17 disagreements and gives real probabilities; about $0.00004 per thread |
-| RAG answers and question rewriting | `openai/gpt-oss-20b` on Groq | Free key, fast, structured output |
-| Embeddings | `@cf/baai/bge-m3` on Cloudflare Workers AI | Free (10,000 neurons a day, about 9 million tokens), no card; Cloudflare does not train on or keep inputs; multilingual (Hindi too) |
-| Evaluation | Laya (Vercel AI Gateway), Jev (OpenRouter, if a key is available), fine-tuned Laya (stretch) | Compared with gpt-oss-20b on the same hand-labelled emails |
-| RAG framework | LangChain.js | Retrievers, splitters, chains and structured output |
-| Dates | chrono-node | Deterministic date parsing on the server |
-| Encryption | Node `crypto`, AES-256-GCM | Standard authenticated encryption |
-| Keep-alive and schedule | Cloudflare Worker cron | Free; keeps the API awake and triggers sync |
+| Front end | React (Vite) + Tailwind on Vercel | Simple pages; Vercel rewrites keep the login cookie first-party |
+| API | Node.js + Express on Render (free) | One language end to end; follows the course repository's structure |
+| Database | MongoDB Atlas (free) | Documents, vector search and keyword search in one place |
+| Gmail | Gmail API, `gmail.readonly` | 30 days of mail, labels, and change history for incremental sync |
+| Classification | Jev via OpenRouter; fallback gpt-oss-20b on Groq | Real probabilities and the best results on the author's inbox; the fallback is free |
+| Chat answers | gpt-oss-20b on Groq, then gpt-oss-120b | Free; when one model's daily limit is reached the next takes over |
+| Embeddings | bge-m3 on Cloudflare Workers AI | Free with no card; Cloudflare does not train on or keep the text; multilingual |
+| AI framework | LangChain.js | Groq chat models with guaranteed structured output, embeddings, text splitting |
+| Dates | chrono-node plus own rules | Deterministic, tested date reading |
+| Encryption | Node `crypto`, AES-256-GCM | For Gmail refresh tokens (and users' API keys) |
+| Schedule and keep-alive | Cloudflare Worker cron | Free; keeps the API awake and triggers sync |
 
-### 11.1 Libraries
+### 12.1 Libraries
 
-**Front end (`client/`)**
+**Used now:** `express`, `mongoose`, `dotenv`, `cookie-parser`, `jsonwebtoken`, `googleapis`, `html-to-text`, `zod`, `chrono-node`, `@langchain/core`, `@langchain/groq`, `@langchain/openai`, `@langchain/textsplitters`; `react`, `react-dom`, `react-router-dom`, `axios`, `tailwindcss`; tooling `nodemon`, `eslint`, `wrangler`. Tests use Node's built-in test runner (`node:test`).
 
-| Library | Purpose |
-| --- | --- |
-| `react`, `react-dom` | UI |
-| `vite`, `@vitejs/plugin-react` | Dev server and build |
-| `react-router-dom` | Pages: Today, Ask, Deadlines, Redaction log, Settings |
-| `@tanstack/react-query` | Server data fetching, caching, loading and error states |
-| `axios` | HTTP client with a shared error interceptor |
-| `react-hook-form`, `zod` | Settings and API-key forms with validation |
-| `tailwindcss` | Styling |
-| `react-markdown` | Rendering chat answers with citation links |
-| `date-fns` | Date formatting for deadlines and emails |
-| `react-hot-toast` | Success and error notifications |
-| `lucide-react` | Icons |
+**Planned (added when the feature that needs them is built):** `helmet`, `cors`, `express-rate-limit` (deployment); `pino` (logs that never contain email text); `react-markdown`, `date-fns`, `lucide-react`, toast notifications (front-end redesign).
 
-**API (`server/`)**
-
-| Library | Purpose |
-| --- | --- |
-| `express` | HTTP API |
-| `mongoose` | MongoDB models; `$vectorSearch` aggregation |
-| `googleapis` | Google sign-in and Gmail API (read-only) |
-| `jsonwebtoken`, `cookie-parser` | Login as a signed JWT in an httpOnly cookie (the course repository's pattern) |
-| `helmet`, `cors`, `express-rate-limit` | Security headers, allowed origins, rate limiting (Ask) |
-| `zod` | Request validation and structured-output schemas |
-| `dotenv` | Environment variables in local development |
-| `pino`, `pino-http` | Structured logging that never logs email text or keys |
-| `agenda` | MongoDB-backed background jobs (backfill, sync) that survive restarts |
-| `p-queue`, `p-retry` | Concurrency limits and backoff for Gmail, Groq and Vercel |
-| `mailparser` | Parsing raw MIME emails |
-| `html-to-text` | HTML emails to plain text |
-| `email-reply-parser` | Removing quoted replies and signatures |
-| `chrono-node` | Deadline and event dates |
-| `@langchain/core` | Messages and structured output for the Groq and embedding clients |
-| `@langchain/textsplitters` | Chunking long emails |
-| `@langchain/textsplitters` | `RecursiveCharacterTextSplitter` for chunking emails |
-| `@langchain/groq` | `ChatGroq` for gpt-oss-20b: classification, answers, rewriting |
-| `@langchain/openai` | `OpenAIEmbeddings` pointed at Cloudflare Workers AI for bge-m3 embeddings |
-| Built-in `fetch` | Laya (Vercel `/v1/evaluate`) and Jev (OpenRouter) calls for the evaluation |
-| Built-in `crypto` | AES-256-GCM encryption of Gmail tokens and API keys |
-
-**Testing**
-
-| Library | Purpose |
-| --- | --- |
-| `vitest` | Unit tests (redaction, dates, urgency, classifier output shape) |
-| `supertest` | API and authorisation tests |
-| `mongodb-memory-server` | Throwaway MongoDB for tests |
-| `msw` | Mocking Gmail, Laya, Groq and Vercel responses |
-| `@testing-library/react` | Front-end component tests |
-
-**Tooling:** `eslint`, `prettier`, `wrangler` (Cloudflare Worker deployment).
-
-## 12. Data model
+## 13. Data model
 
 | Collection | Key fields |
 | --- | --- |
-| `users` | googleId, email, encryptedRefreshToken, sync {historyId, backfillPageToken, backfillDone, lastSyncedAt, lastError}, encryptedApiKeys {groq, jev}, settings |
-| `threads` | userId, threadId, latestMessageId, classification {category, categoryP, securityP, needsActionP, urgencyModel, dateKind, source, questionsVersion}, tier, dueAt, state (open/done/snoozed/dismissed), snoozeUntil |
-| `messages` | userId, gmailId, threadId, from, fromMe, date, subject and body (redacted), strict, hidden (count per type, e.g. {OTP: 1, LINK: 3}; never the values), labelIds, bulkSender, deadlineAt, eventAt (both found while the raw text is in memory) |
-| `sender_rules` | userId, sender or domain, rule (category override, always/never show) |
-| `chunks` | userId, gmailId, threadId, date, text (header + part of the redacted body), embedding (1,024), embeddingModel |
-| *(conversations)* | *Not stored (YAGNI): the page sends the last few turns with each question, which is all the follow-up rewrite needs* |
+| `users` | googleId, email, name, encryptedRefreshToken, sync {historyId, backfillPageToken, backfillDone, lastSyncedAt, lastError} |
+| `messages` | userId, gmailId, threadId, from, fromMe, date, subject and body (redacted), strict, hidden (count per type, never the values), labelIds, bulkSender, deadlineAt, eventAt |
+| `threads` | userId, threadId, latestMessageId, status (pending/classified/failed), classification {category, categoryProbs, securityP, needsActionP, urgency, dateKind, promoCap, source, questionsVersion}, dueAt, state (open/done/snoozed), snoozeUntil, userLabel {category, needsAction} |
+| `senderrules` | userId, sender (email address), category |
+| `chunks` | userId, gmailId, threadId, date, sender, part, text, embedding (1,024), embeddingModel |
 
-## 13. Security and privacy
+## 14. Security and privacy
 
-- **Read-only Gmail access.** Mailmind cannot send, delete or change mail.
-- **Secrets never leave the API server.** Raw email text exists only in memory during processing; originals are never stored.
-- **Only redacted text reaches AI services:** the classifier, the embeddings and RAG answers all receive the same redacted copy, so no secret reaches any of them. The classifier sees only the sender's domain. In the evaluation, Laya and Jev receive the same copy.
-- **Data policies:** each provider's data-use policy (retention and training) is checked and stated plainly in the README.
-- **Encrypted credentials:** Gmail refresh tokens and users' API keys, with AES-256-GCM and a master key in an environment variable. Email text is stored already redacted and not encrypted, so keyword search works.
-- **Authorisation:** every query is scoped to the logged-in user; tests check that one user cannot read another's data.
-- **No secrets in Git:** `.env` is ignored; `.env.example` documents variables.
-- **Delete all my data** removes the user's emails, chunks, conversations, tokens and keys.
-- **Known limit:** the words of an email (names, personal content) can reach AI services; Mailmind protects secrets, not every private detail.
+- **Read-only Gmail access:** Mailmind cannot send, delete or change mail.
+- **Secrets never leave the server:** raw email text exists only in memory while an email is processed; only the redacted copy is stored.
+- **Only redacted text reaches any AI service** (Jev, Groq, Cloudflare). The classifier sees only the sender's domain.
+- **Provider data policies:** Cloudflare does not train on or keep inputs; the README states each provider's policy.
+- **Encrypted credentials:** the Gmail refresh token is stored with AES-256-GCM (verified: the database holds only the encrypted form). Email text is stored redacted but not encrypted, so it can be searched.
+- **Login:** a signed token in an httpOnly cookie, as in the course repository. Every query is scoped to the logged-in user; tested: one user cannot read or change another user's emails.
+- **No secrets in Git:** `.env` is ignored and has never been committed; `.env.example` documents the variables.
+- **Known limit:** the words of an email (names, personal content) can reach the AI services. Mailmind protects secrets, not every private detail, and says so.
 
-## 14. Error handling
+## 15. Error handling
 
 | Failure | Behaviour |
 | --- | --- |
-| Gmail access not granted at sign-in | Message explaining Mailmind needs Gmail access, with a retry button |
-| Gmail login expired (7 days in testing mode) | Sync stops; banner asks the user to reconnect |
-| Server restarts during backfill | Resumes from the saved page |
-| Classifier returns invalid output | Retried once; then the thread is marked pending |
-| Groq unavailable or rate-limited | Thread marked pending and retried later; never stored with less redaction |
-| Embedding service unavailable | Thread still appears in Today; embedded later; keyword search still works |
-| Missing or invalid user API key | Clear message in Settings with a "Test key" button |
-| No relevant emails for a question | "I couldn't find this in your inbox" |
-| New message arrives during classification | The newer message wins; stale results are discarded |
-| Server waking from sleep | Loading screen while the API starts |
+| Gmail access unticked at sign-in | Message asking the user to sign in again and allow Gmail |
+| Gmail login expired or revoked | Sync stops; a link asks the user to sign in again |
+| Server restarts during the first sync | Carries on from the last saved page |
+| Jev unavailable, out of credit or a bad key | gpt-oss-20b classifies instead |
+| A Groq model reaches its daily limit | The next model (gpt-oss-120b) takes over; if all are used up, conversations wait as "sorting…" and the chat says the free daily AI limit is used up |
+| Groq's per-minute limit | Requests wait their turn instead of failing |
+| Embedding service unavailable | Sync still completes; the emails are indexed on the next sync |
+| No relevant email for a question | "I couldn't find this in your inbox" |
+| A new message arrives during classification | The older result is discarded |
 
-Every screen has loading, empty, success and error states.
+## 16. Testing and evaluation
 
-## 15. Testing and evaluation
-
-| What | How | Target |
+| What | How | Result so far |
 | --- | --- | --- |
-| Redaction | Unit tests (141 passing, including 33 adversarial cases) plus real security emails from the author's inbox | No secret reaches any AI request |
-| Classification | 100 hand-labelled real threads; gpt-oss-20b vs Laya vs Jev (if available) vs fine-tuned Laya (stretch) | ≥ 85% category accuracy; accuracy, speed and cost compared |
-| Probabilities | Same set: how often answers given at 0.8 are actually right | Thresholds chosen from the data, not guessed |
-| Security-email recall | Same set | Close to 100%; every miss reviewed |
-| Promotions | 20 marketing emails written to sound urgent | None appear under "Needs action" |
-| Deadlines and events | 25 unit tests (day-first dates, EOD, "by the 15th", times after dates, scores like 10/11 ignored) plus 25 real threads with dates | ≥ 90% correct |
-| RAG | 20 questions with known answers, including follow-ups | ≥ 80% correct, every answer cited |
-| Authorisation | Automated tests across two users | No cross-user access |
+| Redaction | 141 unit tests (33 written to break it) + 70 of the author's real emails checked by hand and by an independent leak scanner | No leaks; 8 bugs found and fixed (e.g. postal PIN codes hidden, bank alerts hiding every amount) |
+| Dates | 25 unit tests + 17 real emails with dates | 5 bugs found and fixed (e.g. "July 21" read as July 2021) |
+| Classification | Jev vs gpt-oss-20b on 76 real conversations; corrections in the app become hand labels | Jev right on 16 of 17 disagreements; full labelled accuracy report to come (target ≥ 85% category accuracy) |
+| Ask your inbox | Real questions on the author's inbox, including follow-ups and unanswerable ones | All correct so far; a 20-question test set with known answers is planned (target ≥ 80%, every answer cited) |
+| Authorisation | Automated and live tests across two accounts | No cross-user access |
 
-## 16. Deployment
+## 17. Deployment
 
-- **Front end:** Vercel (rewrites `/api/*` to Render). **API:** Render free tier. **Database:** MongoDB Atlas free tier. **Scheduler:** Cloudflare Worker.
-- **Evaluator access:** evaluators' Google accounts are added as test users in Google Cloud (up to 100 allowed while the app is in testing); they sign in with their own Gmail. The demo video shows a full walkthrough on the author's inbox. *A synthetic-inbox demo mode was planned and dropped on 7 October (author's decision) to spend the time on the core workflows.*
-- Real Gmail works for accounts added as test users (Google allows up to 100 for unverified apps).
+- **Front end:** Vercel (rewrites `/api/*` to Render). **API:** Render free tier. **Database:** MongoDB Atlas free tier (must accept connections from Render, which has no fixed address). **Scheduler:** Cloudflare Worker.
+- **Evaluator access:** see question 2 in section 19.
 
-## 17. Timeline
+## 18. Timeline
 
 | Dates | Milestone |
 | --- | --- |
-| 7–8 Oct | Repository and git, project skeleton, Google sign-in, first deployment of all services; Groq model check; start labelling real emails |
-| 9–11 Oct | Gmail backfill (resumable, threads, Sent mail), cleaning |
-| 12–14 Oct | Redaction and tests (identifiers, coupon rule), gpt-oss-20b classifier in the decision-model shape, promotion rules, storage tiers |
-| 15–16 Oct | Deadlines and urgency, Today view and actions, sender rules, Add to Calendar |
-| 17–19 Oct | RAG: chunking, embeddings, indexes, hybrid retrieval, cited answers, follow-ups, Gmail links |
-| 20–21 Oct | Incremental sync and deletions, scheduled sync, bring your own key, delete my data |
-| 22–23 Oct | Error and empty states, authorisation tests, classifier evaluation and report; fine-tuned Laya if time allows |
-| 24–25 Oct | README, architecture diagram, demo video |
-| 26–27 Oct | Buffer, incognito checks, submission |
+| 5–7 Oct | Design; redaction, dates, sync, classification, Today view and Ask your inbox built and tested on a real inbox |
+| 8–10 Oct | Deployment of all services; evaluator access settled |
+| 11–17 Oct | Front-end redesign; "Delete all my data"; bring your own key |
+| 18–21 Oct | Hand-labelling and the evaluation report (classification, dates, chat) |
+| 22–24 Oct | README, architecture diagram, demo video |
+| 25–27 Oct | Buffer, final checks, submission |
 
-**If behind schedule, cut in this order:** snooze → sender rules → follow-up questions → RAG filters → fine-tuned Laya → Jev and Laya evaluation. Redaction, classification, Today view, basic RAG and documentation are never cut.
-
-## 18. Risks
+## 19. Risks
 
 | Risk | Mitigation |
 | --- | --- |
-| The probabilities from gpt-oss-20b are its own estimates, not calibrated like a decision model's | Thresholds tuned on the labelled set; the security threshold stays low so mistakes lead to stricter storage |
-| Groq's free tier allows 1,000 requests a day and 8,000 tokens a minute (measured 7 October): about 5–6 classifications a minute | One call at a time, throttled under 7,000 tokens a minute; threads (not messages) classified, newest first; OTP emails classified by rules without a call; on the daily limit the rest stay "sorting…" until the next run; users can add their own Groq key |
-| Laya is weak without fine-tuning (published zero-shot accuracy 0.362 on TypeSafe's typed-decisions benchmark, against 0.318 for random and 0.727 for Jev), may be limited to 512 tokens, and is free on Vercel only until 31 October 2026 | Not used in the live pipeline; evaluated only. A fine-tuned, self-hosted Laya is a stretch goal |
-| Vercel AI Gateway requires a card on file, even for free models | No longer needed for the app: embeddings moved to Cloudflare Workers AI (free, no card); Vercel is only used for Laya in the evaluation |
-| Free tiers change (Vercel, Groq, Render, Atlas) | Every model sits behind an interface and can be swapped |
-| A secret slips through redaction | Rules-first design, strict copy for the AI, adversarial tests, tests on real emails |
-| Gmail login expires weekly in testing mode | Reconnect banner; evaluators may need to sign in again |
+| Groq's free tier: 1,000 requests a day and 8,000 tokens a minute per model | Requests are throttled; when one model's day runs out, the next takes over; Jev now does classification, so Groq is mainly used for chat |
+| Jev runs on a small OpenRouter credit ($1.20) shared by a college club member | About $0.00004 per conversation, so it lasts a long time; gpt-oss-20b takes over automatically if it runs out |
+| A secret slips through redaction | Rules-first design, stricter storage for security emails, adversarial tests, checks on real email |
+| Free tiers change (Render, Atlas, Groq, Cloudflare) | Every model sits behind an interface and can be swapped |
 | A college Google Workspace may block the app | Personal Gmail is fully supported; Workspace is best effort |
-| Atlas free tier limits the number of search indexes | Exactly two needed (vector and text) |
-| Scope for three weeks | Fixed cut order above |
+| Three weeks of scope | Core workflows are already built; remaining work is deployment, design and documentation |
 
-## 19. Questions for you
+## 20. Questions for you
 
-1. **Scope:** are the four workflows (Connect & sync, Protect & classify, Triage, Ask) the right depth for the end-term project?
-2. **Evaluation access:** the guidelines ask for access from an incognito window without extra permissions. Is it acceptable to add your Google account as a test user so you sign in with your own Gmail, together with the demo video?
-3. **AI services:** is it acceptable to rely on free tiers of external AI services (Groq, Cloudflare Workers AI embeddings, and Jev on a small shared OpenRouter credit), given each sits behind an interface and can be swapped?
-4. **Privacy design:** secrets are removed on the server before any AI call, and only credentials are encrypted at rest. Does this meet your expectations for handling personal email?
+1. **Scope:** are the four workflows (Connect & sync, Protect & classify, Triage, Ask your inbox) the right depth for the end-term project?
+
+2. **Evaluator access (I need your decision on this):** Mailmind reads Gmail, and Google treats Gmail access as a *restricted* permission. While the app is unverified, Google allows only two setups:
+   - **Testing mode (current):** only Google accounts I add to a "test users" list (up to 100) can sign in. You would send me the Gmail address you want to use, I add it, and you sign in normally from any browser, including incognito. Access expires every 7 days and needs a fresh sign-in.
+   - **Published but unverified:** anyone can sign in without being added first, but Google shows a warning, "Google hasn't verified this app", and the user clicks "Advanced → Go to Mailmind" to continue. At most 100 people can ever sign in. *(I still need to confirm that Google allows this for Gmail access.)*
+   - **Fully verified, with no warning:** needs Google's review and a paid third-party security assessment, so it is not possible before 27 October.
+
+   The guidelines ask for access "from an incognito window without extra permissions". Which would you accept: adding your Gmail as a test user, the published version with Google's warning screen, or relying on the demo video?
+
+3. **AI services:** is it acceptable to rely on free tiers (Groq, Cloudflare) and a small shared OpenRouter credit for Jev, given each sits behind an interface and can be swapped?
+
+4. **Privacy design:** secrets are removed on the server before any AI call, originals are never stored, and credentials are encrypted. Does this meet your expectations for handling personal email?
+
 5. **Anything missing** that you would expect to see?
