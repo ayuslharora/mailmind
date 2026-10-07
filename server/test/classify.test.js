@@ -79,7 +79,20 @@ test("the due date comes from the newest message with a date of the chosen kind"
 });
 
 test("OTP emails are classified by the rules without an AI call", () => {
-  assert.equal(rulesClassification(message({ strict: true, hidden: new Map([["OTP", 1]]) })).securityP, 1);
+  const otp = message({ subject: "Your OTP", body: "Your OTP is [OTP]. Valid for 10 minutes.", strict: true });
+  assert.equal(rulesClassification(otp).securityP, 1);
   assert.equal(rulesClassification(message({ strict: true, hidden: new Map([["CARD", 1]]) })), null);
-  assert.equal(rulesClassification(message({ strict: false, hidden: new Map([["OTP", 1]]) })), null);
+});
+
+// Found on a real inbox: a security notice stored strictly has every
+// code-shaped number hidden as [OTP] (project IDs, dates), but is not an OTP
+// email, so the rule must not decide it.
+test("a strictly stored email without OTP words goes to the model", () => {
+  const notice = message({
+    subject: "[Action Advised] Manage your unused OAuth clients",
+    body: "Your project [OTP] has inactive OAuth clients that will be deleted.",
+    strict: true,
+    hidden: new Map([["OTP", 3]]),
+  });
+  assert.equal(rulesClassification(notice), null);
 });

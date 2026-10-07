@@ -1,6 +1,7 @@
 // What the classifier is asked, what it is shown, and how its answers are
 // checked. No network calls here; the model call is in utils/classifier.js.
 // Design: docs/classification-case-study.md.
+import { isOtpEmail } from "@mailmind/core";
 
 // Raised whenever the questions change; older results are classified again.
 export const QUESTIONS_VERSION = 3;
@@ -168,10 +169,15 @@ export function pickDueAt(messages, { dateKind, dateKindP }) {
   return message ? { dueAt: message[`${field}At`], dueHasTime: message[`${field}HasTime`] } : { dueAt: null, dueHasTime: null };
 }
 
-// When the rules are sure, no AI call is needed: an email whose one-time code
-// was hidden is a security email that is useless a few minutes later.
+// When the rules are sure, no AI call is needed: an OTP email is a security
+// email that is useless a few minutes later. Decided by its words (which
+// survive redaction), not by hidden [OTP]s: strict mode labels every
+// code-shaped number [OTP], so that would also catch ordinary notices.
+// The placeholders themselves ("[OTP]") would look like OTP words.
+const PLACEHOLDER = /\[[A-Z_]+(?::[^\]]*)?\]/g;
+
 export function rulesClassification(latest) {
-  if (!latest.strict || !(latest.hidden?.get?.("OTP") ?? latest.hidden?.OTP)) return null;
+  if (!isOtpEmail(`${latest.subject}\n${latest.body}`.replace(PLACEHOLDER, " "))) return null;
   return {
     category: "notifications",
     categoryProbs: Object.fromEntries(CATEGORIES.map((c) => [c, c === "notifications" ? 1 : 0])),
