@@ -7,6 +7,10 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    // A fixed port of its own, so another Vite project on 5173 cannot take
+    // it (sign-in sends the browser back to CLIENT_ORIGIN).
+    port: 5180,
+    strictPort: true,
     proxy: {
       '/api': 'http://localhost:4000',
     },
