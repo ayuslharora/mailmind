@@ -134,8 +134,8 @@ The full reasoning is in `docs/classification-case-study.md`.
 
 **Answering**
 1. **Rewrite:** a follow-up question is rewritten into a standalone question using recent conversation history (gpt-oss-20b, low reasoning effort).
-2. **Parse:** filters such as sender, time range and category are extracted as structured output.
-3. **Retrieve:** vector search (top 20) and keyword search (top 20), always filtered by the logged-in user, merged with Reciprocal Rank Fusion (LangChain `EnsembleRetriever`); top 6 kept.
+2. **Parse:** filters such as sender, time range and category extracted as structured output. *Not built yet (YAGNI): the header line on every chunk (sender, subject, date) already lets search match these; added only if the evaluation shows a need.*
+3. **Retrieve:** Atlas `$vectorSearch` (top 20) and `$search` keyword search (top 20), each filtered by the logged-in user inside Atlas, merged with Reciprocal Rank Fusion in about ten lines of code (`utils/retrieve.js`); top 6 kept.
 4. **Answer:** gpt-oss-20b returns `{ found, answer, citations }`.
 5. **Verify:** citations not among the retrieved emails are removed; with no valid citation the app answers "I couldn't find this in your inbox".
 6. **Show:** the answer with citation cards linking to the exact Gmail message, including the account (`authuser`) so the correct Gmail account opens.
@@ -193,9 +193,9 @@ The full reasoning is in `docs/classification-case-study.md`.
 | `html-to-text` | HTML emails to plain text |
 | `email-reply-parser` | Removing quoted replies and signatures |
 | `chrono-node` | Deadline and event dates |
-| `langchain`, `@langchain/core` | Chains, prompts, output parsers, `EnsembleRetriever` |
+| `@langchain/core` | Messages and structured output for the Groq and embedding clients |
 | `@langchain/textsplitters` | Chunking long emails |
-| `@langchain/mongodb` | `MongoDBAtlasVectorSearch`, pre-filtered by user |
+| `@langchain/textsplitters` | `RecursiveCharacterTextSplitter` for chunking emails |
 | `@langchain/groq` | `ChatGroq` for gpt-oss-20b: classification, answers, rewriting |
 | `@langchain/openai` | `OpenAIEmbeddings` pointed at Cloudflare Workers AI for bge-m3 embeddings |
 | Built-in `fetch` | Laya (Vercel `/v1/evaluate`) and Jev (OpenRouter) calls for the evaluation |
@@ -221,8 +221,8 @@ The full reasoning is in `docs/classification-case-study.md`.
 | `threads` | userId, threadId, latestMessageId, classification {category, categoryP, securityP, needsActionP, urgencyModel, dateKind, source, questionsVersion}, tier, dueAt, state (open/done/snoozed/dismissed), snoozeUntil |
 | `messages` | userId, gmailId, threadId, from, fromMe, date, subject and body (redacted), strict, hidden (count per type, e.g. {OTP: 1, LINK: 3}; never the values), labelIds, bulkSender, deadlineAt, eventAt (both found while the raw text is in memory) |
 | `sender_rules` | userId, sender or domain, rule (category override, always/never show) |
-| `chunks` | userId, messageId, text, embedding, embeddingModel, date, from, category |
-| `conversations` | userId, messages [{role, text, citations}], updatedAt |
+| `chunks` | userId, gmailId, threadId, date, text (header + part of the redacted body), embedding (1,024), embeddingModel |
+| *(conversations)* | *Not stored (YAGNI): the page sends the last few turns with each question, which is all the follow-up rewrite needs* |
 
 ## 13. Security and privacy
 
