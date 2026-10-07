@@ -4,6 +4,7 @@ import PublicRoute from './components/PublicRoute'
 import { AuthProvider } from './context/AuthContext'
 import Landing from './pages/Landing'
 import Today from './pages/Today'
+import Ask from './pages/Ask'
 
 function App() {
   return (
@@ -23,6 +24,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Today />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ask"
+            element={
+              <ProtectedRoute>
+                <Ask />
               </ProtectedRoute>
             }
           />

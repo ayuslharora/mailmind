@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axiosInstance from '../axiosCalls/axios'
 import Loading from '../components/Loading'
 import ThreadCard from '../components/ThreadCard'
@@ -106,6 +107,9 @@ function Today() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Today</h1>
         <div className="flex items-center gap-3 text-sm">
+          <Link to="/ask" className="font-medium underline underline-offset-2">
+            Ask your inbox
+          </Link>
           <span className="text-gray-500 dark:text-gray-400">{user.email}</span>
           <button type="button" onClick={logout} className="underline underline-offset-2">
             Log out
