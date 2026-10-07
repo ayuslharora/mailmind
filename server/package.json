@@ -9,11 +9,14 @@
     "start": "node index.js",
     "check-redaction": "node scripts/check-redaction.js",
     "test": "node --test",
-    "compare-classifiers": "node scripts/compare-classifiers.js"
+    "compare-classifiers": "node scripts/compare-classifiers.js",
+    "create-search-indexes": "node scripts/create-search-indexes.js"
   },
   "dependencies": {
     "@langchain/core": "^1.2.17",
     "@langchain/groq": "^1.3.1",
+    "@langchain/openai": "^1.6.2",
+    "@langchain/textsplitters": "^1.0.2",
     "@mailmind/core": "*",
     "cookie-parser": "^1.4.7",
     "dotenv": "^18.0.6",
