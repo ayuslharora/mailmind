@@ -11,7 +11,10 @@ import {
   rulesClassification,
   SECURITY_P,
 } from "./classify.js";
-import { classifyState, DailyLimitError, SOURCE } from "./classifier.js";
+import * as gptOss from "./classifier.js";
+import * as jev from "./classifierJev.js";
+
+const { DailyLimitError } = gptOss;
 import { getMessage } from "./gmail.js";
 import { gmailAuthFor, toStoredMessage } from "./sync.js";
 
@@ -37,6 +40,22 @@ export async function updateThreads(userId, threadIds) {
   }
 }
 
+// Jev is the main classifier: on the author's inbox it agreed with the
+// author's judgement on 16 of the 17 threads where the two models differed,
+// and gave real probabilities (gpt-oss-20b answered exactly 0 or 1 for 83%
+// of yes/no questions). gpt-oss-20b on Groq is the free fallback when there
+// is no OpenRouter key or Jev fails.
+export async function classifyWithBestModel(state) {
+  if (process.env.OPENROUTER_API_KEY) {
+    try {
+      return { answers: await jev.classifyState(state), source: jev.SOURCE };
+    } catch (err) {
+      console.error(`Jev failed, falling back to ${gptOss.SOURCE}: ${err.message}`);
+    }
+  }
+  return { answers: await gptOss.classifyState(state), source: gptOss.SOURCE };
+}
+
 // The classifier thinks it is a security email but the rules did not catch a
 // secret, so the stored copy is light. The raw text is not kept, so the
 // messages are read from Gmail again and redacted strictly.
@@ -60,8 +79,9 @@ async function classifyThread(thread) {
   let source = "rules";
   if (!answers) {
     const state = buildState(messages);
-    answers = applyPromoRules(await classifyState(state), state);
-    source = SOURCE;
+    const result = await classifyWithBestModel(state);
+    answers = applyPromoRules(result.answers, state);
+    source = result.source;
   }
 
   // Only saved if no newer message arrived while the model was answering.

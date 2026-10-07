@@ -32,7 +32,7 @@ Indian college students and early-career professionals whose Gmail mixes college
 - One-step Google sign-in with read-only Gmail access
 - 30-day backfill (resumable), incremental sync every 15 minutes, "Sync now", removal of emails deleted in Gmail
 - Redaction on the server before any AI call; redaction log
-- Thread classification with gpt-oss-20b (category, security, needs action, urgency, deadline/event), returning a probability for every answer in the same shape as a decision model such as Jev
+- Thread classification with Jev (category, security, needs action, urgency, deadline/event), with gpt-oss-20b on Groq as the free fallback; both return a probability for every answer in the same shape
 - Deadline and event extraction; urgency that rises as a date approaches
 - Today view: done, snooze, category correction with sender rules, Add to Calendar (pre-filled Google Calendar link), open in Gmail
 - Ask your inbox: chat with follow-up questions, hybrid search, citations linking to Gmail
@@ -62,10 +62,10 @@ Express API (Render) ───────────────────�
       ├─ Gmail API (read-only)                    sync, threads, Sent mail, history, labels
       ├─ Cleaning + redaction                     raw text only in memory
       ├─ chrono-node                              deadlines from raw text, in memory
-      ├─ Groq ── gpt-oss-20b                      classification of the redacted copy, RAG answers, question rewriting
+      ├─ OpenRouter ── Jev                        classification of the redacted copy (main)
+      ├─ Groq ── gpt-oss-20b                      classification fallback, RAG answers, question rewriting
       ├─ Vercel AI Gateway ── Qwen3 embeddings    embeddings of the stored (redacted) copy
-      │                   └─ Laya                 evaluation only
-      └─ OpenRouter ── Jev                        evaluation only (if a key is available)
+      │                   └─ Laya                 evaluation only (self-hosted Laya: stretch goal)
 
 Cloudflare Worker (cron) ──► /health every 10 min (keeps Render awake) and the 15-minute sync
 ```
@@ -97,7 +97,7 @@ Cloudflare Worker (cron) ──► /health every 10 min (keeps Render awake) and
    | Sender | Domain only |
 
 5. **Add facts computed on the server:** `deadline_in_days` (chrono-node), Gmail's own category label, and whether the email is bulk mail (`List-Unsubscribe` / `Precedence: bulk`).
-6. **One gpt-oss-20b call** (Groq, structured output, low reasoning effort) answering five questions: security email? (yes/no), category (Academic, Jobs, Finance, Personal, Notifications, Promos), needs action? (yes/no), urgency (0–4), date kind (deadline / event / none). Every answer comes with a probability, in the same shape Jev returns. These probabilities are the model's own estimates, not calibrated values, so the thresholds are tuned on the hand-labelled evaluation set.
+6. **One Jev call** (TypeSafe's decision model, through OpenRouter), falling back to gpt-oss-20b on Groq if Jev is unavailable, answering five questions: security email? (yes/no), category (Academic, Jobs, Finance, Personal, Notifications, Promos), needs action? (yes/no), urgency (0–4), date kind (deadline / event / none). Every answer comes with a probability, in the same shape Jev returns. These probabilities are the model's own estimates, not calibrated values, so the thresholds are tuned on the hand-labelled evaluation set.
 7. **On failure:** invalid output is retried once; if Groq is unavailable or rate-limited, the thread is marked pending and retried later. It is never processed with less redaction.
 8. **Post-classification rules:** if the classifier and Gmail's headers both say promotion, urgency is capped and the thread never appears under "Needs action".
 
@@ -148,7 +148,8 @@ The full reasoning is in `docs/classification-case-study.md`.
 | API | Node.js + Express on Render | One language end to end; Gmail and AI SDK support |
 | Database | MongoDB Atlas (free tier) | Flexible email documents; vector and text search in one place |
 | Gmail | Gmail API (`gmail.readonly`) | A month of mail, threads, labels and incremental history |
-| Classification and answers | `openai/gpt-oss-20b` on Groq | Free key, fast, structured output; already used for RAG, so one provider covers both |
+| Classification | Jev (`typesafe/jev-1.13`) via OpenRouter; fallback `openai/gpt-oss-20b` on Groq | Jev agreed with the author on 16 of 17 disagreements and gives real probabilities; about $0.00004 per thread |
+| RAG answers and question rewriting | `openai/gpt-oss-20b` on Groq | Free key, fast, structured output |
 | Embeddings | `alibaba/qwen3-embedding-0.6b` via Vercel AI Gateway | Within the free monthly credit; multilingual; provider stores nothing and does not train |
 | Evaluation | Laya (Vercel AI Gateway), Jev (OpenRouter, if a key is available), fine-tuned Laya (stretch) | Compared with gpt-oss-20b on the same hand-labelled emails |
 | RAG framework | LangChain.js | Retrievers, splitters, chains and structured output |

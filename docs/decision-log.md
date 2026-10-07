@@ -52,6 +52,8 @@ The final design is in `docs/PRD.md`. The classification design is covered in de
 | **gpt-oss-20b on Groq** | Free key confirmed working; structured JSON output; already used for RAG. No built-in probabilities | First the fallback → **chosen as main classifier**, prompted to answer in Jev's shape: a probability for each yes/no answer, each choice option and each urgency level. Swapping in Jev later means writing one adapter. Its probabilities are self-reported, so thresholds are tuned on labelled emails |
 | Fine-tuned Laya | Weights are open (Apache-2.0); a public Kaggle notebook fine-tunes it on free GPUs in about four hours; could be self-hosted on a free Hugging Face Space. Needs several hundred labelled real emails | **Stretch goal** |
 
+**Update, 7 October (afternoon):** a college club member shared an OpenRouter key with a $1.20 limit. On the author's inbox, Jev agreed with the author's judgement on 16 of the 17 threads where it and gpt-oss-20b disagreed, and gave real probabilities where gpt-oss-20b answered exactly 0 or 1 for 83% of yes/no questions. **Jev is now the main classifier; gpt-oss-20b is the fallback.** The whole comparison cost $0.0031.
+
 **Lesson:** the classifier was first chosen for being free and having the right output shape, before checking its accuracy. Once the published numbers were read, the choice was reversed. The final pick is decided by measuring all candidates on the same hand-labelled real emails, not by reputation.
 
 **Rule:** every number reported in the evaluation comes from real runs.

@@ -38,8 +38,8 @@ export async function classifyState(state) {
       body: JSON.stringify({ model: "typesafe/jev-1.13", state, questions: JEV_QUESTIONS }),
     });
     if (res.ok) return normalizeAnswers(toRaw((await res.json()).answers));
-    // Out of credit or a bad request: retrying will not help.
-    if (attempt >= MAX_ATTEMPTS || res.status === 402 || res.status === 400) {
+    // A bad key, no credit left or a bad request: retrying will not help.
+    if (attempt >= MAX_ATTEMPTS || [400, 401, 402, 403].includes(res.status)) {
       throw new Error(`Jev ${res.status}: ${(await res.text()).slice(0, 200)}`);
     }
     await sleep(2000 * attempt);

@@ -252,6 +252,18 @@ The labelled emails must be real and kept separate from any data used for fine-t
 
 The last row is the most important finding. gpt-oss-20b answers in the right *shape*, but its "probabilities" are almost always 0 or 1, so the thresholds (0.3, 0.6) barely matter and cannot be tuned. A decision model trained to produce calibrated probabilities (Jev) should do better here; the evaluation will measure it. Accuracy is not yet known: it needs the hand-labelled set.
 
+### Jev against gpt-oss-20b (7 October 2026, same inbox, same redacted state)
+
+| Measure | gpt-oss-20b | Jev |
+| --- | --- | --- |
+| Agreement on category / needs action / security / date kind | 88% / 86% / 96% / 99% | (same pairs) |
+| Yes/no answers exactly 0 or 1 | 126 of 152 (83%) | 0 of 152 |
+| Threads it said need action | 19 | 8 |
+| Right on the 17 threads where they disagreed (judged by the author) | 1 | 16 |
+| Cost for 76 threads | free | $0.0031 |
+
+gpt-oss-20b's typical mistake was full certainty ("needs action: 1") on promotions, product launches and confirmations; Jev's only miss was the category of a declined-payment email. **Decision: Jev became the main classifier**, with gpt-oss-20b as the automatic fallback when the OpenRouter key is missing or Jev fails. The proper measure is still the hand-labelled set; these 17 threads are its first labels.
+
 ## 9. Trade-offs accepted
 
 - **Some meaning is still hidden:** a number near a code word, such as a room number after "sign in", becomes `[OTP]`, and every code-shaped number in an OTP email is hidden. Over-redaction is preferred to a leak.
