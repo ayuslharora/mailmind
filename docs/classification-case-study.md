@@ -239,6 +239,19 @@ All measured on 100 hand-labelled threads from the author's own inbox:
 
 The labelled emails must be real and kept separate from any data used for fine-tuning. If another model clearly beats gpt-oss-20b, it replaces it through a new adapter; nothing else in the app changes.
 
+### First live run (7 October 2026, the author's inbox, last 30 days)
+
+| Measure | Result |
+| --- | --- |
+| Threads | 85 (90 messages), all classified; 78 by gpt-oss-20b, 7 by the OTP rule with no AI call |
+| Time | 14 minutes under the free-tier throttle (about 6 threads a minute) |
+| Categories | 46 promos, 29 notifications, 8 finance, 2 jobs |
+| Flagged as security emails | 11, re-read from Gmail and stored strictly |
+| Promotions capped by the header rule | 33 |
+| **Probabilities exactly 0 or 1** | **153 of 170** yes/no answers; every one on a 0.05 grid |
+
+The last row is the most important finding. gpt-oss-20b answers in the right *shape*, but its "probabilities" are almost always 0 or 1, so the thresholds (0.3, 0.6) barely matter and cannot be tuned. A decision model trained to produce calibrated probabilities (Jev) should do better here; the evaluation will measure it. Accuracy is not yet known: it needs the hand-labelled set.
+
 ## 9. Trade-offs accepted
 
 - **Some meaning is still hidden:** a number near a code word, such as a room number after "sign in", becomes `[OTP]`, and every code-shaped number in an OTP email is hidden. Over-redaction is preferred to a leak.
