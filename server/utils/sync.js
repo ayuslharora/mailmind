@@ -4,6 +4,8 @@ import User from "../models/user.model.js";
 import { decrypt } from "./crypto.js";
 import { createOAuthClient, getMessage, getProfile, listChanges, listMessagePage } from "./gmail.js";
 import { classifyPending, updateThreads } from "./classifyThreads.js";
+import Chunk from "../models/chunk.model.js";
+import { indexMissing } from "./indexMessages.js";
 
 // Last 30 days, without spam and trash. Sent mail is included for context.
 const BACKFILL_QUERY = "newer_than:30d -in:spam -in:trash";
@@ -124,6 +126,8 @@ async function runChanges(user, auth) {
   const savedThreadIds = await saveMessages(auth, userId, presentIds);
   const gone = await Message.find({ userId, gmailId: { $in: goneIds } }, "threadId");
   await Message.deleteMany({ userId, gmailId: { $in: goneIds } });
+  // Deleted mail must not turn up in answers either.
+  await Chunk.deleteMany({ userId, gmailId: { $in: goneIds } });
   await updateThreads(userId, [...savedThreadIds, ...gone.map((m) => m.threadId)]);
 
   await User.updateOne(
@@ -131,6 +135,16 @@ async function runChanges(user, auth) {
     { "sync.historyId": historyId, "sync.lastSyncedAt": new Date(), "sync.lastError": null },
   );
   classifyPending(userId);
+}
+
+// New messages become searchable. A failed embedding call does not fail the
+// sync: the messages are picked up again next time.
+async function indexForSearch(userId) {
+  try {
+    await indexMissing(userId);
+  } catch (err) {
+    console.error(`Indexing for search failed for user ${userId}: ${err.message}`);
+  }
 }
 
 // The one entry point: the 30-day backfill the first time, then only changes.
@@ -146,6 +160,7 @@ export async function syncUser(userId) {
 
     if (!user.sync?.backfillDone) {
       await runBackfill(user, auth);
+      await indexForSearch(userId);
       return;
     }
     try {
@@ -160,6 +175,7 @@ export async function syncUser(userId) {
       );
       await runBackfill(await User.findById(userId), auth);
     }
+    await indexForSearch(userId);
   } catch (err) {
     // invalid_grant: access was revoked, or Google's 7-day limit for apps in
     // testing ran out. The user has to sign in again.

@@ -16,6 +16,7 @@ import * as jev from "./classifierJev.js";
 
 const { DailyLimitError } = gptOss;
 import { getMessage } from "./gmail.js";
+import { indexMessages } from "./indexMessages.js";
 import { gmailAuthFor, toStoredMessage } from "./sync.js";
 
 // The latest message and the two before it are what the classifier sees.
@@ -72,6 +73,11 @@ async function storeStrictly(userId, threadId) {
     const email = await getMessage(auth, message.gmailId);
     await Message.updateOne({ _id: message._id }, { $set: toStoredMessage(userId, email, { strict: true }) });
   }
+  // Replace the chunks made from the light copy.
+  await indexMessages(
+    userId,
+    light.map((m) => m.gmailId),
+  );
 }
 
 async function classifyThread(thread) {
