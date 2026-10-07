@@ -3,6 +3,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import Chunk from "../models/chunk.model.js";
 import Message from "../models/message.model.js";
 import { EMBEDDING_MODEL, getEmbeddings } from "./embeddings.js";
+import { senderAddress } from "./today.js";
 
 const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 800, chunkOverlap: 100 });
 
@@ -30,9 +31,10 @@ export async function indexMessages(userId, gmailIds) {
 
   const rows = [];
   for (const message of messages) {
-    for (const text of await chunksOf(message)) {
-      rows.push({ userId, gmailId: message.gmailId, threadId: message.threadId, date: message.date, text });
-    }
+    const sender = message.fromMe ? "me" : senderAddress(message.from);
+    (await chunksOf(message)).forEach((text, part) => {
+      rows.push({ userId, gmailId: message.gmailId, threadId: message.threadId, date: message.date, sender, part, text });
+    });
   }
   if (rows.length === 0) return 0;
 

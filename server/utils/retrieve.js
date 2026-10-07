@@ -28,8 +28,34 @@ export function fuseRankings(lists, k = RRF_K) {
   return [...scores.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => byId.get(id));
 }
 
+const LIST_LIMIT = 15;
+
+// filters: { senders: [addresses], after: Date, before: Date }, all optional.
+function vectorFilter(userId, { senders, after, before } = {}) {
+  const filter = { userId };
+  if (senders) filter.sender = { $in: senders };
+  if (after || before) filter.date = { ...(after && { $gte: after }), ...(before && { $lte: before }) };
+  return filter;
+}
+
+function textFilter(userId, { senders, after, before } = {}) {
+  const filter = [{ equals: { path: "userId", value: userId } }];
+  if (senders) filter.push({ in: { path: "sender", value: senders } });
+  if (after || before) filter.push({ range: { path: "date", ...(after && { gte: after }), ...(before && { lte: before }) } });
+  return filter;
+}
+
+// "Summarize all emails from X": every matching email rather than the most
+// similar chunks. One chunk per email (its start), newest first.
+export function listMatching(userId, filters, limit = LIST_LIMIT) {
+  return Chunk.find({ ...vectorFilter(userId, filters), part: 0 }, { embedding: 0 })
+    .sort({ date: -1 })
+    .limit(limit)
+    .lean();
+}
+
 // userId must be an ObjectId: aggregation stages are not cast by Mongoose.
-export async function retrieve(userId, question, { top = 6 } = {}) {
+export async function retrieve(userId, question, { top = 6, filters = {} } = {}) {
   const queryVector = await getEmbeddings().embedQuery(question);
   const hide = { $project: { embedding: 0 } };
 
@@ -42,7 +68,7 @@ export async function retrieve(userId, question, { top = 6 } = {}) {
           queryVector,
           numCandidates: VECTOR_POOL,
           limit: CANDIDATES,
-          filter: { userId },
+          filter: vectorFilter(userId, filters),
         },
       },
       hide,
@@ -53,7 +79,7 @@ export async function retrieve(userId, question, { top = 6 } = {}) {
           index: TEXT_INDEX,
           compound: {
             must: [{ text: { query: question, path: "text" } }],
-            filter: [{ equals: { path: "userId", value: userId } }],
+            filter: textFilter(userId, filters),
           },
         },
       },

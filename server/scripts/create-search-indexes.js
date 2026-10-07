@@ -1,5 +1,5 @@
-// Creates the two Atlas Search indexes "Ask your inbox" needs. Safe to run
-// again: existing indexes are left alone.
+// Creates the two Atlas Search indexes "Ask your inbox" needs, or updates
+// their definitions if they already exist. Safe to run again.
 //
 //   npm run create-search-indexes --workspace server
 
@@ -28,6 +28,7 @@ const indexes = [
         // Every search is filtered to the logged-in user inside the index.
         { type: "filter", path: "userId" },
         { type: "filter", path: "date" },
+        { type: "filter", path: "sender" },
       ],
     },
   },
@@ -41,6 +42,7 @@ const indexes = [
           text: { type: "string" },
           userId: { type: "objectId" },
           date: { type: "date" },
+          sender: { type: "token" },
         },
       },
     },
@@ -58,7 +60,8 @@ const existing = new Set((await chunks.listSearchIndexes().toArray()).map((index
 
 for (const index of indexes) {
   if (existing.has(index.name)) {
-    console.log(`${index.name}: already exists`);
+    await chunks.updateSearchIndex(index.name, index.definition);
+    console.log(`${index.name}: definition updated (Atlas rebuilds it in a minute)`);
   } else {
     await chunks.createSearchIndex(index);
     console.log(`${index.name}: created (Atlas takes a minute to build it)`);

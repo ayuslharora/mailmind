@@ -4,7 +4,7 @@
 import { ChatGroq } from "@langchain/groq";
 import { z } from "zod";
 import { CATEGORIES, DATE_KINDS, normalizeAnswers, QUESTIONS, SYSTEM_PROMPT, URGENCY_LEVELS } from "./classify.js";
-import { estimateTokens, withGroqBudget } from "./groqLimiter.js";
+import { estimateTokens, withGroqModels } from "./groqLimiter.js";
 
 export const SOURCE = "gpt-oss-20b";
 
@@ -26,22 +26,23 @@ const RETRY_TEMPERATURE = 0.3;
 
 // Created on first use, after dotenv has loaded GROQ_API_KEY.
 const models = new Map();
-const getModel = (temperature) => {
-  if (!models.has(temperature)) {
-    const model = new ChatGroq({ model: "openai/gpt-oss-20b", temperature, reasoningEffort: "low", maxRetries: 0 });
+const getModel = ({ model: name, apiKey }, temperature) => {
+  const key = `${name}@${apiKey}@${temperature}`;
+  if (!models.has(key)) {
+    const model = new ChatGroq({ model: name, apiKey, temperature, reasoningEffort: "low", maxRetries: 0 });
     // jsonSchema: Groq rejects any reply that does not match the schema.
-    models.set(temperature, model.withStructuredOutput(answerSchema, { method: "jsonSchema", includeRaw: true }));
+    models.set(key, model.withStructuredOutput(answerSchema, { method: "jsonSchema", includeRaw: true }));
   }
-  return models.get(temperature);
+  return models.get(key);
 };
 
 export { DailyLimitError } from "./groqLimiter.js";
 
 export function classifyState(state) {
   const input = JSON.stringify({ state, questions: QUESTIONS });
-  return withGroqBudget(estimateTokens(SYSTEM_PROMPT, input), async (attempt) => {
+  return withGroqModels(estimateTokens(SYSTEM_PROMPT, input), async (option, attempt) => {
     const temperature = attempt === 1 ? FIRST_TEMPERATURE : RETRY_TEMPERATURE;
-    const { parsed, raw } = await getModel(temperature).invoke([
+    const { parsed, raw } = await getModel(option, temperature).invoke([
       ["system", SYSTEM_PROMPT],
       ["human", input],
     ]);

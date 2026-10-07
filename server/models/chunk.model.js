@@ -26,6 +26,18 @@ const chunkSchema = new mongoose.Schema(
       required: true,
     },
 
+    // The sender's email address, lowercased, for "emails from …" questions.
+    sender: {
+      type: String,
+      default: "",
+    },
+
+    // Position in the message: 0 is the start (header and first part).
+    part: {
+      type: Number,
+      default: 0,
+    },
+
     // "From: … | Subject: … | Date: …" followed by part of the body.
     text: {
       type: String,
@@ -48,6 +60,7 @@ const chunkSchema = new mongoose.Schema(
 );
 
 chunkSchema.index({ userId: 1, gmailId: 1 });
+chunkSchema.index({ userId: 1, part: 1, sender: 1, date: -1 });
 
 const Chunk = mongoose.model("Chunk", chunkSchema);
 
