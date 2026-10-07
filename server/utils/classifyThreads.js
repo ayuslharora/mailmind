@@ -91,8 +91,13 @@ export async function classifyPending(userId) {
   running.add(key);
 
   try {
-    // Threads that failed last time get one more try per run.
+    // Threads that failed last time get one more try per run, and results
+    // from older questions are redone.
     await Thread.updateMany({ userId, status: "failed" }, { $set: { status: "pending" } });
+    await Thread.updateMany(
+      { userId, status: "classified", "classification.questionsVersion": { $lt: QUESTIONS_VERSION } },
+      { $set: { status: "pending" } },
+    );
     const failedThisRun = new Set();
 
     for (;;) {

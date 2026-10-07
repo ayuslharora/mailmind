@@ -2,7 +2,8 @@
 // checked. No network calls here; the model call is in utils/classifier.js.
 // Design: docs/classification-case-study.md.
 
-export const QUESTIONS_VERSION = 2;
+// Raised whenever the questions change; older results are classified again.
+export const QUESTIONS_VERSION = 3;
 
 export const CATEGORIES = ["academic", "jobs", "finance", "personal", "notifications", "promos"];
 export const URGENCY_LEVELS = ["ignore", "sometime", "this_week", "today", "immediately"];
@@ -24,13 +25,13 @@ export const QUESTIONS = {
       finance: "Banks, bills, payments, receipts.",
       personal: "Messages from friends or family.",
       notifications: "Automated alerts, account notices, deliveries.",
-      promos: "Marketing, sales, newsletters.",
+      promos: "Marketing, sales, newsletters, and brand messages written to sound personal.",
     },
   },
   needs_action: {
     type: "boolean",
     instructions:
-      "Does the recipient need to reply, submit, pay, register or act? If the latest message is from the recipient (from_me), nothing is needed from them.",
+      "Is there a specific thing the recipient must do, such as reply to a person, pay, submit, register before a deadline, or fix a problem with their account? Launches, newsletters, invitations, receipts, invoices and confirmations of something already done do not need action. If the latest message is from the recipient (from_me), nothing is needed from them.",
   },
   urgency: {
     type: "score",

@@ -15,9 +15,11 @@ const gmailLink = (email, threadId) =>
   `https://mail.google.com/mail/?authuser=${encodeURIComponent(email)}#all/${threadId}`;
 
 // Every thread goes in exactly one section. Urgency is worked out now, so it
-// rises as a deadline gets closer without classifying again.
+// rises as a deadline gets closer without classifying again. Only a deadline
+// that needed action can be missed; a past event, a promotion or a date that
+// was only information just goes in the summary.
 function sectionOf(item, now) {
-  if (item.missed) return "missed";
+  if (item.missed) return item.dateKind === "deadline" && item.needsAction ? "missed" : "rest";
   if (item.urgency >= URGENT) return "urgent";
   if (item.needsAction) return "needsAction";
   if (item.dueAt && item.dueAt - now <= COMING_UP_MS) return "comingUp";
@@ -39,7 +41,10 @@ export const getToday = async (req, res) => {
     const message = messageById.get(thread.latestMessageId);
     if (!message) continue;
     const c = thread.classification;
-    const live = urgency({ modelUrgency: c.urgency, dueAt: thread.dueAt, promoCap: c.promoCap }, now);
+    const live = urgency(
+      { modelUrgency: c.urgency, dueAt: thread.dueAt, promoCap: c.promoCap, receivedAt: message.date },
+      now,
+    );
 
     const item = {
       threadId: thread.threadId,
@@ -51,7 +56,9 @@ export const getToday = async (req, res) => {
       category: c.category,
       urgency: Math.round(live.urgency * 10) / 10,
       missed: live.missed,
-      needsAction: c.needsActionP >= NEEDS_ACTION_P && !c.promoCap,
+      // A promotion never needs action, even when Gmail's headers did not
+      // confirm it (seen on a real inbox: four promos listed as tasks).
+      needsAction: c.needsActionP >= NEEDS_ACTION_P && !c.promoCap && c.category !== "promos",
       dueAt: thread.dueAt ?? null,
       dueHasTime: thread.dueHasTime ?? null,
       dateKind: c.dateKind,
