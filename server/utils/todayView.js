@@ -12,8 +12,9 @@ const firstLine = (body = "") => (body.split("\n").find((line) => line.trim()) ?
 const gmailLink = (email, threadId) =>
   `https://mail.google.com/mail/?authuser=${encodeURIComponent(email)}#all/${threadId}`;
 
-// Most urgent first; equal urgency (old emails fade to 0), newest first.
-const byPriority = (a, b) => b.urgency - a.urgency || b.date - a.date;
+// Most urgent first. Old tasks all rest at the same urgency, so ties go to
+// how urgent the classifier first judged them, then to the newest.
+const byPriority = (a, b) => b.urgency - a.urgency || b.firstUrgency - a.firstUrgency || b.date - a.date;
 
 // The Today view for one user: every open, classified thread in one section.
 // Threads that need nothing go in "other", newest first, so the latest email
@@ -56,6 +57,7 @@ export async function buildToday(user, now = new Date()) {
       fromMe: message.fromMe,
       date: message.date,
       ...live,
+      firstUrgency: c.urgency,
       dueAt: thread.dueAt ?? null,
       dueHasTime: thread.dueHasTime ?? null,
       dateKind: c.dateKind,
