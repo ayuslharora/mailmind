@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import Landing from './pages/Landing'
 import Today from './pages/Today'
 import Ask from './pages/Ask'
+import Email from './pages/Email'
 
 function App() {
   return (
@@ -32,6 +33,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Ask />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/email/:threadId"
+            element={
+              <ProtectedRoute>
+                <Email />
               </ProtectedRoute>
             }
           />

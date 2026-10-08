@@ -38,6 +38,7 @@ Indian college students and early-career professionals whose Gmail mixes college
 | Ask your inbox (RAG) with citations | Built; correct on every question tried on the author's inbox, including follow-ups, "summarize all emails from…" and questions the inbox cannot answer |
 | Automated tests | 211 passing (167 for redaction, dates and urgency; 44 for the server) |
 | Daily digest tab; "Delete all my data" (also revokes Gmail access); security headers; rate limits on AI features and sign-in | Built, tested |
+| "What the AI saw" page: for any email, the exact text sent to the classifier, its answer with probabilities, and the stored redacted copy with what was hidden | Built |
 | Still to do | Deployment, front-end redesign, labelled evaluation report, README, demo video, bring your own key |
 
 ## 6. Scope

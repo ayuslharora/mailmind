@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { calendarLink, daysToMonday, formatDue, formatReceived, nineAmIst } from '../utils/format'
 
 const CATEGORY_LABELS = {
@@ -113,7 +114,9 @@ function ThreadCard({ item, onAction }) {
   return (
     <li className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="font-medium">{item.subject || '(no subject)'}</p>
+        <Link to={`/email/${item.threadId}`} className="font-medium hover:underline">
+          {item.subject || '(no subject)'}
+        </Link>
         <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400">{formatReceived(item.date)}</span>
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-400">{item.fromMe ? 'You' : item.from}</p>

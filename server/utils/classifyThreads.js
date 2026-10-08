@@ -20,7 +20,7 @@ import { indexMessages } from "./indexMessages.js";
 import { gmailAuthFor, toStoredMessage } from "./sync.js";
 
 // The latest message and the two before it are what the classifier sees.
-const CONTEXT_MESSAGES = 3;
+export const CONTEXT_MESSAGES = 3;
 
 // Marks threads with a new latest message as pending, and removes threads
 // whose messages were all deleted in Gmail.
