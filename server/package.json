@@ -11,6 +11,9 @@
     "test": "node --test",
     "compare-classifiers": "node scripts/compare-classifiers.js",
     "check-chat-privacy": "node scripts/check-chat-privacy.js",
+    "eval-classifier": "node scripts/eval-classifier.js",
+    "label-threads": "node scripts/label-threads.js",
+    "eval-privacy": "node scripts/eval-privacy.js",
     "create-search-indexes": "node scripts/create-search-indexes.js"
   },
   "dependencies": {
