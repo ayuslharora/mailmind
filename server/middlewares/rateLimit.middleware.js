@@ -14,6 +14,27 @@ export const aiLimiter = rateLimit({
   message: tooMany,
 });
 
+// "Sync now": new mail is classified by AI, so a few times a minute is plenty.
+export const syncLimiter = rateLimit({
+  windowMs: MINUTE_MS,
+  limit: 3,
+  keyGenerator: (req) => String(req.user._id),
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: tooMany,
+});
+
+// Every API request, counted per IP address. The Today page asks twice every
+// 10 seconds while mail is being sorted, far below this.
+export const apiLimiter = rateLimit({
+  windowMs: MINUTE_MS,
+  limit: 120,
+  keyGenerator: (req) => ipKeyGenerator(req.ip),
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: tooMany,
+});
+
 // Sign-in, counted per IP address.
 export const signInLimiter = rateLimit({
   windowMs: MINUTE_MS,

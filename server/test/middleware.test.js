@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import jwt from "jsonwebtoken";
 
 process.env.JWT_SECRET = "test-secret";
+process.env.ALLOWED_EMAILS = "me@example.com, Friend@Example.com";
 const { default: User } = await import("../models/user.model.js");
 const { default: isAuthenticated } = await import("../middlewares/auth.middleware.js");
 const { default: errorMiddleware } = await import("../middlewares/error.middleware.js");
@@ -15,7 +16,7 @@ function fakeResponse() {
   return res;
 }
 
-async function check(token, findById = async () => ({ _id: "u1" })) {
+async function check(token, findById = async () => ({ _id: "u1", email: "me@example.com" })) {
   User.findById = () => ({ select: findById });
   const res = fakeResponse();
   let passedOn = null;
@@ -35,6 +36,14 @@ test("no login, an expired login and a foreign token each say so", async () => {
   const foreign = jwt.sign({ userId: "u1" }, "another-apps-secret");
   assert.equal((await check(foreign)).res.body.message, "Please sign in again.");
   assert.equal((await check(foreign)).res.statusCode, 401);
+});
+
+test("an account taken off the allowed list is cut off", async () => {
+  const token = jwt.sign({ userId: "u1" }, "test-secret");
+  const { res, passedOn } = await check(token, async () => ({ _id: "u1", email: "stranger@example.com" }));
+  assert.equal(res.statusCode, 403);
+  assert.equal(passedOn, null);
+  assert.equal((await check(token, async () => ({ _id: "u2", email: "friend@example.com" }))).passedOn, "ok", "case does not matter");
 });
 
 // Seen live: a database outage was reported as "Invalid or expired token".

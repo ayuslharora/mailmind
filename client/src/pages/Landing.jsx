@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 const SIGN_IN_ERRORS = {
   failed: 'Sign-in did not finish. Please try again.',
   'gmail-access': 'Mailmind needs permission to read your Gmail. Please sign in again and tick the Gmail box.',
+  'not-invited': 'Mailmind is invite-only for now, and this Google account is not on the list. Nothing was saved.',
 }
 
 function Landing() {

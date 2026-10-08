@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import User from "../models/user.model.js";
+import { isAllowed } from "../utils/allowList.js";
 import generateToken from "../utils/generateToken.js";
 import { encrypt } from "../utils/crypto.js";
 import { isClassifying } from "../utils/classifyThreads.js";
@@ -63,6 +64,12 @@ export const finishGoogleSignIn = async (req, res) => {
 
     const ticket = await auth.verifyIdToken({ idToken: tokens.id_token, audience: process.env.GOOGLE_CLIENT_ID });
     const { sub: googleId, email, name } = ticket.getPayload();
+
+    // Not on the list: give back the Gmail access just granted and save nothing.
+    if (!isAllowed(email)) {
+      await auth.revokeToken(tokens.refresh_token ?? tokens.access_token).catch(() => {});
+      return backToClient(res, "?signin=not-invited");
+    }
 
     const update = { googleId, email, name };
     if (tokens.refresh_token) update.encryptedRefreshToken = encrypt(tokens.refresh_token);

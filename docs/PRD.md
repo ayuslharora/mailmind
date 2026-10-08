@@ -37,7 +37,7 @@ Indian college students and early-career professionals whose Gmail mixes college
 | Today view with done, snooze, corrections, sender rules, Add to Calendar | Built (plain interface; to be redesigned) |
 | Ask your inbox (RAG) with citations | Built; correct on every question tried on the author's inbox, including follow-ups, "summarize all emails from…" and questions the inbox cannot answer |
 | Automated tests | 211 passing (167 for redaction, dates and urgency; 44 for the server) |
-| Daily digest tab; "Delete all my data" (also revokes Gmail access); security headers; rate limits on AI features and sign-in | Built, tested |
+| Daily digest tab; "Delete all my data" (also revokes Gmail access); security headers; rate limits on AI features, Sync now, sign-in and the whole API; invite-only sign-in | Built, tested |
 | "What the AI saw" page: for any email, the exact text sent to the classifier, its answer with probabilities, and the stored redacted copy with what was hidden | Built |
 | Still to do | Deployment, front-end redesign, labelled evaluation report, README, demo video |
 
@@ -161,7 +161,8 @@ Cloudflare Worker (cron) ──► /health every 10 minutes (keeps Render awake)
 - **Login:** a signed token in an httpOnly cookie, as in the course repository. Every query is scoped to the logged-in user; tested: one user cannot read or change another user's emails.
 - **No secrets in Git:** `.env` is ignored and has never been committed; `.env.example` documents the variables.
 - **Delete all my data:** removes every message, conversation, search chunk and rule, revokes Mailmind's Gmail access at Google, and deletes the account (tested).
-- **Rate limits and headers:** AI features are limited per user and sign-in per address; `helmet` sets security headers.
+- **Rate limits and headers:** AI features (10 a minute) and Sync now (3 a minute) are limited per user; sign-in (20 a minute) and every API request (120 a minute) per IP address; `helmet` sets security headers.
+- **Invite-only:** only the Gmail addresses in `ALLOWED_EMAILS` can sign in. Anyone else is turned away before anything is saved, and the Gmail access they just granted is given back. Removing an address cuts that account off on its next request and stops its sync.
 - **Known limit:** the words of an email (names, personal content) can reach the AI services. Mailmind protects secrets, not every private detail, and says so.
 
 ## 15. Error handling

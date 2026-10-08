@@ -14,6 +14,7 @@ import threadRoutes from "./routes/thread.routes.js";
 import askRoutes from "./routes/ask.routes.js";
 import digestRoutes from "./routes/digest.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
+import { apiLimiter } from "./middlewares/rateLimit.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,7 @@ const requiredEnvVars = [
   "CRON_SECRET",
   "CLOUDFLARE_ACCOUNT_ID",
   "CLOUDFLARE_API_TOKEN",
+  "ALLOWED_EMAILS",
 ];
 
 const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
@@ -64,6 +66,7 @@ if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
 app.use(helmet());
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
+app.use("/api", apiLimiter);
 
 app.use("/health", healthRoutes);
 app.use("/api/auth", authRoutes);

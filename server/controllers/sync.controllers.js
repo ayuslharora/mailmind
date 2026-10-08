@@ -1,6 +1,7 @@
 import Message from "../models/message.model.js";
 import Thread from "../models/thread.model.js";
 import User from "../models/user.model.js";
+import { isAllowed } from "../utils/allowList.js";
 import crypto from "crypto";
 import { isClassifying } from "../utils/classifyThreads.js";
 import { isSyncing, syncUser } from "../utils/sync.js";
@@ -39,7 +40,9 @@ export const syncEveryone = async (req, res) => {
   if (!sameSecret(req.get("x-cron-secret"), process.env.CRON_SECRET)) {
     return res.status(401).json({ message: "Not allowed" });
   }
-  const users = await User.find({ encryptedRefreshToken: { $exists: true }, "sync.lastError": { $ne: "reconnect" } }, "_id");
+  const found = await User.find({ encryptedRefreshToken: { $exists: true }, "sync.lastError": { $ne: "reconnect" } }, "_id email");
+  // Accounts taken off the allowed list are not synced.
+  const users = found.filter((user) => isAllowed(user.email));
   res.status(202).json({ message: "Sync started", users: users.length });
   for (const user of users) await syncUser(user._id);
 };

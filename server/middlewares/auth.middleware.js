@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import { isAllowed } from "../utils/allowList.js";
 
 const isAuthenticated = async (req, res, next) => {
   const token = req.cookies.token;
@@ -22,6 +23,9 @@ const isAuthenticated = async (req, res, next) => {
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
+    }
+    if (!isAllowed(user.email)) {
+      return res.status(403).json({ message: "This account no longer has access to Mailmind." });
     }
 
     req.user = user;
