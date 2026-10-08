@@ -6,6 +6,7 @@ import { createOAuthClient, getMessage, getProfile, listChanges, listMessagePage
 import { classifyPending, updateThreads } from "./classifyThreads.js";
 import Chunk from "../models/chunk.model.js";
 import { indexMissing } from "./indexMessages.js";
+import { stopRequested, SyncStopped, throwIfStopped } from "./stopSync.js";
 
 // Last 30 days, without spam and trash. Sent mail is included for context.
 const BACKFILL_QUERY = "newer_than:30d -in:spam -in:trash";
@@ -72,6 +73,7 @@ async function saveMessages(auth, userId, ids) {
 
   const threadIds = [];
   for (let i = 0; i < newIds.length; i += BATCH_SIZE) {
+    throwIfStopped(userId);
     const emails = (await Promise.all(newIds.slice(i, i + BATCH_SIZE).map((id) => readMessage(auth, id)))).filter(Boolean);
     if (emails.length === 0) continue;
     threadIds.push(...emails.map((email) => email.threadId));
@@ -102,6 +104,7 @@ async function runBackfill(user, auth) {
 
   let pageToken = user.sync?.backfillPageToken ?? undefined;
   do {
+    throwIfStopped(userId);
     const page = await listMessagePage(auth, { query: BACKFILL_QUERY, pageToken, pageSize: PAGE_SIZE });
     await updateThreads(userId, await saveMessages(auth, userId, page.ids));
     // Not awaited: classification starts on the newest threads while older
@@ -140,6 +143,7 @@ async function runChanges(user, auth) {
 // New messages become searchable. A failed embedding call does not fail the
 // sync: the messages are picked up again next time.
 async function indexForSearch(userId) {
+  if (stopRequested(userId)) return;
   try {
     await indexMissing(userId);
   } catch (err) {
@@ -150,7 +154,7 @@ async function indexForSearch(userId) {
 // The one entry point: the 30-day backfill the first time, then only changes.
 export async function syncUser(userId) {
   const key = String(userId);
-  if (running.has(key)) return;
+  if (running.has(key) || stopRequested(userId)) return;
   running.add(key);
 
   try {
@@ -177,6 +181,8 @@ export async function syncUser(userId) {
     }
     await indexForSearch(userId);
   } catch (err) {
+    // Stopped by "Delete all my data": the user's data is about to go.
+    if (err instanceof SyncStopped) return;
     // invalid_grant: access was revoked, or Google's 7-day limit for apps in
     // testing ran out. The user has to sign in again.
     const reconnect = err.response?.data?.error === "invalid_grant" || /invalid_grant/.test(err.message);

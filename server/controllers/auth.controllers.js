@@ -4,7 +4,8 @@ import generateToken from "../utils/generateToken.js";
 import { encrypt } from "../utils/crypto.js";
 import { isClassifying } from "../utils/classifyThreads.js";
 import { deleteAccount } from "../utils/deleteAccount.js";
-import { isSyncing } from "../utils/sync.js";
+import { clearStop, requestStop } from "../utils/stopSync.js";
+import { isSyncing, syncUser } from "../utils/sync.js";
 import { createOAuthClient, GMAIL_SCOPES } from "../utils/gmail.js";
 
 // One step: Google sign-in and read-only Gmail access on the same screen.
@@ -69,6 +70,9 @@ export const finishGoogleSignIn = async (req, res) => {
     const user = await User.findOneAndUpdate({ googleId }, update, { upsert: true, new: true, setDefaultsOnInsert: true });
 
     res.cookie("token", generateToken(user._id), cookieOptions);
+    // Not awaited: the first sync (30 days) starts straight away, and the
+    // Today page shows "Fetching your mail…" until it is done.
+    syncUser(user._id);
     return backToClient(res);
   } catch (err) {
     console.error(err);
@@ -88,13 +92,25 @@ export const logoutUser = (req, res) => {
   return res.status(200).json({ message: "Logged out" });
 };
 
-// "Delete all my data". Refused while mail is being fetched or sorted, so
-// a background job cannot write data back after it has been deleted.
+const STOP_WAIT_MS = 60 * 1000;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// "Delete all my data": stops any sync or classification for the user first
+// (they check between steps), waits for them to finish stopping, then
+// deletes, so nothing can be written back afterwards.
 export const deleteMe = async (req, res) => {
-  if (isSyncing(req.user._id) || isClassifying(req.user._id)) {
-    return res.status(409).json({ message: "Your mail is still being fetched or sorted. Try again in a minute." });
+  const userId = req.user._id;
+  requestStop(userId);
+  try {
+    const deadline = Date.now() + STOP_WAIT_MS;
+    while ((isSyncing(userId) || isClassifying(userId)) && Date.now() < deadline) await sleep(250);
+    if (isSyncing(userId) || isClassifying(userId)) {
+      return res.status(503).json({ message: "Still stopping your sync. Please try again in a minute." });
+    }
+    const result = await deleteAccount(userId);
+    res.clearCookie("token", cookieOptions);
+    return res.status(200).json({ message: "All your data was deleted", ...result });
+  } finally {
+    clearStop(userId);
   }
-  const result = await deleteAccount(req.user._id);
-  res.clearCookie("token", cookieOptions);
-  return res.status(200).json({ message: "All your data was deleted", ...result });
 };

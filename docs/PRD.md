@@ -39,7 +39,7 @@ Indian college students and early-career professionals whose Gmail mixes college
 | Automated tests | 211 passing (167 for redaction, dates and urgency; 44 for the server) |
 | Daily digest tab; "Delete all my data" (also revokes Gmail access); security headers; rate limits on AI features and sign-in | Built, tested |
 | "What the AI saw" page: for any email, the exact text sent to the classifier, its answer with probabilities, and the stored redacted copy with what was hidden | Built |
-| Still to do | Deployment, front-end redesign, labelled evaluation report, README, demo video, bring your own key |
+| Still to do | Deployment, front-end redesign, labelled evaluation report, README, demo video |
 
 ## 6. Scope
 
@@ -52,11 +52,11 @@ Indian college students and early-career professionals whose Gmail mixes college
 - Deadline and event extraction; urgency that rises as a date approaches and fades as an email gets older
 - Today view: done, snooze, corrections (optionally for every email from a sender), Add to Calendar, open in Gmail
 - Ask your inbox: follow-up questions, sender and date filters, hybrid search, citations linking to Gmail
-- "Delete all my data"; bring your own Groq key
+- "Delete all my data", which also stops any sync in progress and revokes Gmail access
 
 **Out of scope:** sending, deleting or changing email; writing to Google Calendar (a pre-filled link is used instead); other email providers; attachments; a browser extension (a possible future front end on the same backend).
 
-**Dropped:** a demo mode with a synthetic inbox (decided on 7 October, to spend the time on the core workflows). How evaluators get in is question 2 in section 19.
+**Dropped:** a demo mode with a synthetic inbox, and letting users bring their own Groq key (decided on 7–8 October, to finish and test what is built before adding more). How evaluators get in is question 2 in section 20.
 
 **Stretch goal:** fine-tuning Laya, an open-weight decision model, on hand-labelled emails and hosting it for free, as a third classifier in the comparison.
 
@@ -132,7 +132,7 @@ Cloudflare Worker (cron) ──► /health every 10 minutes (keeps Render awake)
 | Embeddings | bge-m3 on Cloudflare Workers AI | Free with no card; Cloudflare does not train on or keep the text; multilingual |
 | AI framework | LangChain.js | Groq chat models with guaranteed structured output, embeddings, text splitting |
 | Dates | chrono-node plus own rules | Deterministic, tested date reading |
-| Encryption | Node `crypto`, AES-256-GCM | For Gmail refresh tokens (and users' API keys) |
+| Encryption | Node `crypto`, AES-256-GCM | For Gmail refresh tokens |
 | Schedule and keep-alive | Cloudflare Worker cron | Free; keeps the API awake and triggers sync |
 
 ### 12.1 Libraries
@@ -199,7 +199,7 @@ Cloudflare Worker (cron) ──► /health every 10 minutes (keeps Render awake)
 | --- | --- |
 | 5–7 Oct | Design; redaction, dates, sync, classification, Today view and Ask your inbox built and tested on a real inbox |
 | 8–10 Oct | Deployment of all services; evaluator access settled |
-| 11–17 Oct | Front-end redesign; "Delete all my data"; bring your own key |
+| 11–17 Oct | Front-end redesign; chat privacy and prompt-injection tests |
 | 18–21 Oct | Hand-labelling and the evaluation report (classification, dates, chat) |
 | 22–24 Oct | README, architecture diagram, demo video |
 | 25–27 Oct | Buffer, final checks, submission |

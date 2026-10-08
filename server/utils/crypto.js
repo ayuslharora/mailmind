@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 // AES-256-GCM with the key in ENCRYPTION_KEY (32 random bytes, base64).
-// Used only for credentials: Gmail refresh tokens, and later users' API keys.
+// Used only for credentials: the Gmail refresh token.
 // Email text is stored redacted but not encrypted, so it can be searched.
 const ALGORITHM = "aes-256-gcm";
 

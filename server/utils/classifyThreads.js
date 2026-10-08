@@ -17,6 +17,7 @@ import * as jev from "./classifierJev.js";
 const { DailyLimitError } = gptOss;
 import { getMessage } from "./gmail.js";
 import { indexMessages } from "./indexMessages.js";
+import { stopRequested, SyncStopped, throwIfStopped } from "./stopSync.js";
 import { gmailAuthFor, toStoredMessage } from "./sync.js";
 
 // The latest message and the two before it are what the classifier sees.
@@ -122,7 +123,7 @@ export const isClassifying = (userId) => running.has(String(userId));
 
 export async function classifyPending(userId) {
   const key = String(userId);
-  if (running.has(key)) return;
+  if (running.has(key) || stopRequested(userId)) return;
   running.add(key);
 
   try {
@@ -136,6 +137,7 @@ export async function classifyPending(userId) {
     const failedThisRun = new Set();
 
     for (;;) {
+      throwIfStopped(userId);
       const thread = await Thread.findOne({ userId, status: "pending", _id: { $nin: [...failedThisRun] } }).sort({
         lastMessageAt: -1,
       });
@@ -143,13 +145,15 @@ export async function classifyPending(userId) {
       try {
         await classifyThread(thread);
       } catch (err) {
-        if (err instanceof DailyLimitError) throw err;
+        if (err instanceof DailyLimitError || err instanceof SyncStopped) throw err;
         console.error(`Classification failed for a thread of user ${key}: ${err.message}`);
         failedThisRun.add(thread._id);
         await Thread.updateOne({ _id: thread._id, status: "pending" }, { $set: { status: "failed" } });
       }
     }
   } catch (err) {
+    // Stopped by "Delete all my data": nothing more to do.
+    if (err instanceof SyncStopped) return;
     // The daily limit: the rest stay pending until the next sync.
     console.error(`Classification stopped for user ${key}: ${err.message}`);
   } finally {
