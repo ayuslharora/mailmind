@@ -16,6 +16,11 @@ const SECTIONS = [
   { key: 'needsAction', title: 'Needs action' },
   { key: 'comingUp', title: 'Coming up this week' },
 ]
+const ALL_KEYS = ['urgent', 'needsAction', 'comingUp', 'missed', 'other']
+
+// Every open email in one list, newest first.
+const newestFirst = (today) =>
+  ALL_KEYS.flatMap((key) => today[key]).sort((a, b) => new Date(b.date) - new Date(a.date))
 
 function Section({ title, items, onAction }) {
   if (items.length === 0) return null
@@ -41,6 +46,8 @@ function Today() {
   const [loginNeeded, setLoginNeeded] = useState(false)
   const [showMissed, setShowMissed] = useState(false)
   const [tab, setTab] = useState('today')
+  // 'priority': the sections; 'newest': all mail by time.
+  const [order, setOrder] = useState('priority')
   // Bumped to fetch again on demand (after "Sync now" or an action).
   const [reloadKey, setReloadKey] = useState(0)
   // "Marked done · Undo": threadId is set when the action hid the thread.
@@ -121,7 +128,9 @@ function Today() {
   if (!today && !error) return <Loading text="Opening your inbox…" />
 
   const sectionsEmpty = today && SECTIONS.every(({ key }) => today[key].length === 0)
-  const rest = today ? Object.entries(today.rest) : []
+  const restCounts = {}
+  for (const item of today?.other ?? []) restCounts[item.category] = (restCounts[item.category] ?? 0) + 1
+  const rest = Object.entries(restCounts)
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
@@ -194,6 +203,33 @@ function Today() {
       {tab === 'digest' && <Digest />}
 
       {tab === 'today' && today && (
+        <div className="mt-6 flex gap-2 text-sm" role="group" aria-label="Sort by">
+          {[
+            ['priority', 'Priority'],
+            ['newest', 'Newest'],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={order === key}
+              onClick={() => setOrder(key)}
+              className={`rounded-lg border px-3 py-1 font-medium ${
+                order === key
+                  ? 'border-gray-900 bg-gray-900 text-white dark:border-gray-100 dark:bg-gray-100 dark:text-gray-900'
+                  : 'border-gray-300 dark:border-gray-700'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {tab === 'today' && today && order === 'newest' && (
+        <Section title="All mail" items={newestFirst(today)} onAction={act} />
+      )}
+
+      {tab === 'today' && today && order === 'priority' && (
         <>
           {SECTIONS.map(({ key, title }) => (
             <Section key={key} title={title} items={today[key]} onAction={act} />
@@ -211,7 +247,10 @@ function Today() {
 
           {rest.length > 0 && (
             <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
-              Also in your inbox: {rest.map(([category, n]) => `${n} ${category}`).join(', ')}.
+              Also in your inbox: {rest.map(([category, n]) => `${n} ${category}`).join(', ')}.{' '}
+              <button type="button" onClick={() => setOrder('newest')} className="underline underline-offset-2">
+                See all, newest first
+              </button>
             </p>
           )}
 

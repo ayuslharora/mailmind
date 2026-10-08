@@ -12,7 +12,12 @@ const firstLine = (body = "") => (body.split("\n").find((line) => line.trim()) ?
 const gmailLink = (email, threadId) =>
   `https://mail.google.com/mail/?authuser=${encodeURIComponent(email)}#all/${threadId}`;
 
+// Most urgent first; equal urgency (old emails fade to 0), newest first.
+const byPriority = (a, b) => b.urgency - a.urgency || b.date - a.date;
+
 // The Today view for one user: every open, classified thread in one section.
+// Threads that need nothing go in "other", newest first, so the latest email
+// can always be found.
 export async function buildToday(user, now = new Date()) {
   const userId = user._id;
 
@@ -26,8 +31,7 @@ export async function buildToday(user, now = new Date()) {
   const latest = await Message.find({ userId, gmailId: { $in: threads.map((t) => t.latestMessageId) } });
   const messageById = new Map(latest.map((m) => [m.gmailId, m]));
 
-  const sections = { urgent: [], needsAction: [], comingUp: [], missed: [] };
-  const rest = {};
+  const sections = { urgent: [], needsAction: [], comingUp: [], missed: [], other: [] };
 
   for (const thread of threads) {
     const message = messageById.get(thread.latestMessageId);
@@ -59,15 +63,16 @@ export async function buildToday(user, now = new Date()) {
     };
 
     const section = sectionOf(item, now);
-    if (section === "rest") rest[item.category] = (rest[item.category] ?? 0) + 1;
-    else sections[section].push(item);
+    sections[section === "rest" ? "other" : section].push(item);
   }
 
-  // Most urgent first; dated sections by date.
-  sections.urgent.sort((a, b) => b.urgency - a.urgency);
+  // Urgent and needs action by priority, dated sections by date; "other" keeps
+  // the newest-first order of the query.
+  sections.urgent.sort(byPriority);
+  sections.needsAction.sort(byPriority);
   sections.comingUp.sort((a, b) => a.dueAt - b.dueAt);
   sections.missed.sort((a, b) => b.dueAt - a.dueAt);
 
   const sorting = await Thread.countDocuments({ userId, status: { $in: ["pending", "failed"] } });
-  return { ...sections, rest, sorting };
+  return { ...sections, sorting };
 }

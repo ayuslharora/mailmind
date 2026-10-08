@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { digestItems, digestKey, keepValidPoints } from "../utils/digest.js";
 
 const item = (threadId) => ({ threadId, subject: "s", from: "f" });
-const today = { urgent: [item("a")], needsAction: [item("b"), item("c")], comingUp: [], missed: [item("d")], rest: {} };
+const today = { urgent: [item("a")], needsAction: [item("b"), item("c")], comingUp: [], missed: [item("d")], other: [] };
 
 test("items come most urgent section first, each marked with its section", () => {
   assert.deepEqual(
