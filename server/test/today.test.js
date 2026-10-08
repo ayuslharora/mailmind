@@ -16,6 +16,16 @@ test("a new-login alert is urgent the day it arrives, then fades", () => {
   assert.equal(place({ securityP: 0.9, needsActionP: 0.7 }, { receivedAt: hoursAgo(30) }), "needsAction");
 });
 
+test("a task not yet done never fades below 1; information fades to 0", () => {
+  const tenDaysAgo = hoursAgo(240);
+  const task = signals({ classification: { ...base, needsActionP: 0.9, urgency: 3 }, receivedAt: tenDaysAgo }, now);
+  assert.equal(task.urgency, 1);
+  const info = signals({ classification: { ...base, needsActionP: 0.2, urgency: 3 }, receivedAt: tenDaysAgo }, now);
+  assert.equal(info.urgency, 0);
+  const done = signals({ classification: { ...base, needsActionP: 0.9, urgency: 3 }, receivedAt: tenDaysAgo, label: { needsAction: false } }, now);
+  assert.equal(done.urgency, 0, "the user said it needs nothing");
+});
+
 test("an OTP email (classified by the rules) is never urgent", () => {
   assert.equal(place({ securityP: 1, source: "rules" }), "rest");
 });

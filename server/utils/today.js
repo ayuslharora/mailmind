@@ -5,6 +5,8 @@ import { urgency } from "@mailmind/core";
 import { NEEDS_ACTION_P, SECURITY_P } from "./classify.js";
 
 export const URGENT = 3;
+// "sometime" on the classifier's 0–4 scale.
+const TASK_MIN_URGENCY = 1;
 const COMING_UP_MS = 7 * 24 * 60 * 60 * 1000;
 
 // The sender's email address, lowercased: "Prof <p@x.edu>" → "p@x.edu".
@@ -24,14 +26,13 @@ export function signals(
   const securityAlert = c.securityP >= SECURITY_P && c.source !== "rules";
   const modelUrgency = securityAlert ? Math.max(c.urgency, URGENT) : c.urgency;
   const live = urgency({ modelUrgency, dueAt, promoCap: c.promoCap, receivedAt }, now);
-  return {
-    urgency: Math.round(live.urgency * 10) / 10,
-    missed: live.missed,
-    category,
-    // A promotion never needs action, even when Gmail's headers did not
-    // confirm it.
-    needsAction: label?.needsAction ?? (c.needsActionP >= NEEDS_ACTION_P && !c.promoCap && category !== "promos"),
-  };
+  // A promotion never needs action, even when Gmail's headers did not
+  // confirm it.
+  const needsAction = label?.needsAction ?? (c.needsActionP >= NEEDS_ACTION_P && !c.promoCap && category !== "promos");
+  // A task not yet done stays ranked until it is marked done or snoozed;
+  // only information fades to nothing.
+  const value = needsAction && !live.missed ? Math.max(live.urgency, TASK_MIN_URGENCY) : live.urgency;
+  return { urgency: Math.round(value * 10) / 10, missed: live.missed, category, needsAction };
 }
 
 // item: { urgency, missed, needsAction, dateKind, category, dueAt }.
