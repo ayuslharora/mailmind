@@ -10,6 +10,7 @@
     "check-redaction": "node scripts/check-redaction.js",
     "test": "node --test",
     "compare-classifiers": "node scripts/compare-classifiers.js",
+    "check-chat-privacy": "node scripts/check-chat-privacy.js",
     "create-search-indexes": "node scripts/create-search-indexes.js"
   },
   "dependencies": {

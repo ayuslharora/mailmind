@@ -21,6 +21,7 @@ coverage/
 
 # Output of the redaction check script: contains real (redacted) email
 redaction-check*.txt
+chat-privacy-check*.txt
 
 # Classifier comparison results (thread IDs and answers)
 compare-results.json
