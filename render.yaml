@@ -1,0 +1,46 @@
+# Render Blueprint for the API server: Render → New → Blueprint → this repo.
+# Values marked "sync: false" are secrets: Render asks for them on the first
+# deploy (copy them from server/.env). They are never stored in git.
+services:
+  - type: web
+    name: mailmind-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci
+    startCommand: npm start --workspace server
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ORIGIN
+        value: https://mailmind.ayuslh.in
+      - key: GOOGLE_REDIRECT_URI
+        value: https://mailmind.ayuslh.in/api/auth/google/callback
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_API_KEY_2
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: CLOUDFLARE_ACCOUNT_ID
+        sync: false
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false
+      - key: ALLOWED_EMAILS
+        sync: false

@@ -62,7 +62,9 @@ mongoose
 app.disable("x-powered-by");
 // On Render the request reaches Express through one proxy; this makes
 // req.ip the visitor's address, which the sign-in rate limit counts by.
-if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
+// Requests pass through Vercel and Render's proxies before reaching us; the
+// rate limits need the visitor's address, which sits that many hops back.
+if (process.env.NODE_ENV === "production") app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS) || 1);
 app.use(helmet());
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
