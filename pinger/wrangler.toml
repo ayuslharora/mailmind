@@ -1,6 +1,8 @@
 name = "mailmind-pinger"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
+# Runs on its schedule only; it needs no public URL.
+workers_dev = false
 
 # Every 10 minutes: ping /health (under Render's 15-minute idle limit, with
 # room for cron jitter). Every 15 minutes: start the Gmail sync.
