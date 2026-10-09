@@ -8,7 +8,7 @@ compatibility_date = "2026-10-01"
 crons = ["*/10 * * * *", "*/15 * * * *"]
 
 [vars]
-TARGET_URL = "https://YOUR-RENDER-SERVICE.onrender.com/health"
-SYNC_URL = "https://YOUR-RENDER-SERVICE.onrender.com/api/sync/scheduled"
+TARGET_URL = "https://mailmind-api-317i.onrender.com/health"
+SYNC_URL = "https://mailmind-api-317i.onrender.com/api/sync/scheduled"
 
 # CRON_SECRET is a secret, not a var: npx wrangler secret put CRON_SECRET
