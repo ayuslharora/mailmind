@@ -1,0 +1,805 @@
+{
+  "now": "2026-10-10T10:00:00+05:30",
+  "threads": [
+    {
+      "id": "t01",
+      "messages": [
+        { "from": "Prof. R. Mehta <rmehta@college.example.edu>", "from_me": false,
+          "subject": "DBMS Assignment 3 – Normalisation and Indexing",
+          "body": "Dear students,\n\nAssignment 3 (Normalisation up to BCNF + B+ tree indexing) has been uploaded on Moodle. Submit a single PDF on Moodle by Wednesday, 14 October 2026, 11:59 PM. Late submissions will lose 20% per day. Handwritten scans are acceptable if legible.\n\nRegards,\nR. Mehta\nDept. of CSE",
+          "date": "2026-10-09T18:30:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Plain coursework submission due in 4 days."
+    },
+    {
+      "id": "t02",
+      "messages": [
+        { "from": "StyleKart <offers@mail.stylekart.example.com>", "from_me": false,
+          "subject": "URGENT: Last chance!! 70% OFF ends at MIDNIGHT ⏰",
+          "body": "Aarav, this is your FINAL reminder!\n\nThe End of Season Sale ends TONIGHT at 11:59 PM. Sneakers, hoodies and bestsellers at up to 70% OFF + extra 10% with UPI.\n\nDon't miss out – act NOW before it's gone forever.\n\nSHOP NOW\n\nYou are receiving this because you subscribed to StyleKart emails. Unsubscribe",
+          "date": "2026-10-10T08:15:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": true,
+      "note": "Marketing urgency words; sale ending is not something the recipient must do, so no action, ignore, and no real deadline."
+    },
+    {
+      "id": "t03",
+      "messages": [
+        { "from": "Google <no-reply@accounts.example.com>", "from_me": false,
+          "subject": "Security alert: new sign-in on Windows",
+          "body": "A new sign-in on Windows\n\naarav.sharma@example.com\n\nWe noticed a new sign-in to your Google Account on a Windows device (Chrome, near Lucknow, Uttar Pradesh, India) at 7:41 AM IST.\n\nIf this was you, you don't need to do anything. If not, we'll help you secure your account.\n\nCheck activity\n\nYou received this email to let you know about important changes to your Google Account and services.",
+          "date": "2026-10-10T07:42:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": true, "category": "notifications", "needs_action": false, "urgency": "today", "date_kind": "none" },
+      "hard": true,
+      "note": "New-login alert: security yes; nothing is required if it was the user, but an unrecognised device is worth checking today. needs_action false is debatable."
+    },
+    {
+      "id": "t04",
+      "messages": [
+        { "from": "Mummy <sunita.sharma@example.com>", "from_me": false,
+          "subject": "Call karna",
+          "body": "Beta, I tried calling you twice yesterday night, your phone was switched off. Is everything okay? Call me when you are free today. Papa is also asking.\n\nMummy",
+          "date": "2026-10-10T08:05:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": true, "urgency": "today", "date_kind": "none" },
+      "hard": false,
+      "note": "Family asking for a call today."
+    },
+    {
+      "id": "t05",
+      "messages": [
+        { "from": "HireHub Job Alerts <jobalerts@hirehub.example.com>", "from_me": false,
+          "subject": "25 new Software Engineer Intern jobs matching your profile",
+          "body": "Hi Aarav,\n\nHere are today's top matches for 'Software Engineer Intern' in Bengaluru, Hyderabad and Remote:\n\n- SDE Intern – Payflow (Bengaluru) – ₹40,000/month\n- Backend Intern – Kartly (Remote)\n- ML Intern – VisionStack (Hyderabad)\n...and 22 more.\n\nView all jobs\n\nYou are receiving this job alert because you created one on HireHub. Manage alerts | Unsubscribe",
+          "date": "2026-10-09T06:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Automated job-board digest: jobs topic but no action, low value. Pair with t06 (real interview)."
+    },
+    {
+      "id": "t06",
+      "messages": [
+        { "from": "Neha Kapoor <neha.kapoor@finlytics.example.com>", "from_me": false,
+          "subject": "Finlytics – Shortlisted for Software Engineering Internship",
+          "body": "Hi Aarav,\n\nCongratulations! You have cleared the online assessment for the Software Engineering Internship (Summer 2027). Our team will share the technical interview schedule shortly.\n\nBest,\nNeha Kapoor\nTalent Acquisition, Finlytics",
+          "date": "2026-10-07T15:10:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Neha Kapoor <neha.kapoor@finlytics.example.com>", "from_me": false,
+          "subject": "RE: Finlytics – Shortlisted for Software Engineering Internship",
+          "body": "Hi Aarav,\n\nYour technical interview is scheduled for Tuesday, 13 October 2026 at 11:00 AM IST (60 mins, Google Meet). The link will be sent a day before.\n\nPlease reply to this email to confirm your availability by Sunday, 11 October. If the slot doesn't work, suggest two alternatives.\n\nBest,\nNeha",
+          "date": "2026-10-09T16:20:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": true, "urgency": "this_week", "date_kind": "event" },
+      "hard": true,
+      "note": "Real interview: must reply to confirm by Sunday; main date is the interview (event), though the confirm-by date could argue for deadline."
+    },
+    {
+      "id": "t07",
+      "messages": [
+        { "from": "Controller of Examinations <exams@college.example.edu>", "from_me": false,
+          "subject": "Mid-Semester Examination Timetable – Odd Semester 2026",
+          "body": "Dear Students,\n\nThe Mid-Semester Examinations for the Odd Semester 2026 will be held from Monday, 19 October to Saturday, 24 October 2026. The subject-wise timetable for B.Tech III year (CSE):\n\n19 Oct – Operating Systems (10:00 AM – 11:30 AM)\n20 Oct – DBMS\n21 Oct – Computer Networks\n22 Oct – Engineering Mathematics III\n24 Oct – Software Engineering\n\nStudents must carry their ID cards. Seating arrangement will be displayed on the notice board.\n\nController of Examinations",
+          "date": "2026-10-08T14:00:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": false, "urgency": "this_week", "date_kind": "event" },
+      "hard": true,
+      "note": "Exam timetable is an event, not a deadline; informational (nothing to submit). Exams start in 9 days so this_week; sometime is arguable."
+    },
+    {
+      "id": "t08",
+      "messages": [
+        { "from": "Bharat Bank Alerts <alerts@bharatbank.example.in>", "from_me": false,
+          "subject": "You have done a UPI transaction of Rs 249.00",
+          "body": "Dear Customer,\n\nRs 249.00 has been debited from account **4821 to VPA snacko@ybl (SNACKO FOOD) on 09-10-26. UPI Ref No 628391047712.\n\nIf you did not authorise this transaction, call 1800-000-0000 or SMS BLOCK to 5676.\n\nWarm regards,\nBharat Bank",
+          "date": "2026-10-09T21:14:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Routine UPI debit receipt; the boilerplate 'if not you' line does not make it a security alert or an action."
+    },
+    {
+      "id": "t09",
+      "messages": [
+        { "from": "AirNet Broadband <billing@airnet.example.in>", "from_me": false,
+          "subject": "Auto-debit failed for your AirNet bill of ₹799",
+          "body": "Hi Aarav,\n\nWe could not collect ₹799 for your AirNet Fiber bill (Account 10045821) via UPI AutoPay because of insufficient balance.\n\nPlease pay by 12 October 2026 to avoid suspension of your internet service.\n\nPay now: airnet.example.in/pay\n\nTeam AirNet",
+          "date": "2026-10-06T09:30:00+05:30", "gmail_tab": "updates", "bulk": true },
+        { "from": "AirNet Broadband <billing@airnet.example.in>", "from_me": false,
+          "subject": "Reminder: ₹799 still unpaid – service will be suspended on 12 Oct",
+          "body": "Hi Aarav,\n\nYour AirNet bill of ₹799 is still pending. Your connection will be suspended if payment is not received by 12 October 2026.\n\nPay now: airnet.example.in/pay\n\nTeam AirNet",
+          "date": "2026-10-09T09:30:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": true,
+      "note": "Failed payment needing action (contrast with receipts t08/t32/t36). Due in 2 days: this_week, today is arguable."
+    },
+    {
+      "id": "t10",
+      "messages": [
+        { "from": "Snacko <no-reply@snacko.example.com>", "from_me": false,
+          "subject": "Your Snacko login OTP is 739204",
+          "body": "739204 is your one-time password to log in to Snacko. It is valid for 10 minutes. Do not share this OTP with anyone, including Snacko employees.",
+          "date": "2026-10-10T09:57:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": true, "category": "notifications", "needs_action": true, "urgency": "immediately", "date_kind": "none" },
+      "hard": true,
+      "note": "Fresh login OTP (3 minutes old, valid 10 min): security, use it now. Contrast with expired OTP t34. needs_action true is debatable."
+    },
+    {
+      "id": "t11",
+      "messages": [
+        { "from": "Snacko <hello@mail.snacko.example.com>", "from_me": false,
+          "subject": "Aarav, we miss you! 🍕 50% OFF just for you",
+          "body": "Hey Aarav,\n\nIt's been a while since your last order and honestly, we miss you. So here's something special: 50% OFF up to ₹100 on your next order with code MISSYOU50.\n\nValid on orders above ₹199. Your favourites from Pizza Point are waiting!\n\nOrder now\n\nUnsubscribe",
+          "date": "2026-10-08T19:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Brand message written to sound personal."
+    },
+    {
+      "id": "t12",
+      "messages": [
+        { "from": "Dr. S. Iyer <siyer@college.example.edu>", "from_me": false,
+          "subject": "CN extra class today – venue changed to LH-204",
+          "body": "Dear III year CSE students,\n\nToday's (Saturday) extra class for Computer Networks, 2:00–3:30 PM, will be held in LH-204 instead of LH-101 because of the projector issue. Attendance will be taken.\n\nS. Iyer",
+          "date": "2026-10-10T07:30:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": false, "urgency": "today", "date_kind": "event" },
+      "hard": false,
+      "note": "Class today with venue change: event today; just attend, nothing to reply or submit."
+    },
+    {
+      "id": "t13",
+      "messages": [
+        { "from": "Contestly <events@mail.contestly.example.com>", "from_me": false,
+          "subject": "HackVerse 2026: Registrations close in 48 hours! ⏳",
+          "body": "Hi Aarav,\n\nHackVerse 2026, India's biggest student hackathon, is almost full! ₹5 lakh prize pool, PPIs from top startups, and swag for every finalist.\n\nRegistrations close on 11 October, 11:59 PM. Form a team of 2–4 and register now.\n\nRegister now\n\nYou are receiving this because you have a Contestly account. Unsubscribe",
+          "date": "2026-10-09T11:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": false, "urgency": "sometime", "date_kind": "deadline" },
+      "hard": true,
+      "note": "Mass hackathon invite the user never signed up for: jobs (hackathon), an invitation so no action even with a registration deadline. Contrast with t14."
+    },
+    {
+      "id": "t14",
+      "messages": [
+        { "from": "Contestly <noreply@contestly.example.com>", "from_me": false,
+          "subject": "Team ByteBandits – Round 2 prototype submission due Mon, 12 Oct",
+          "body": "Hi Aarav,\n\nYour team ByteBandits has qualified for Round 2 of the Smart Campus Hackathon.\n\nUpload your prototype demo video (max 3 min) and GitHub repo link on the hackathon dashboard by Monday, 12 October 2026, 11:59 PM IST. Teams that do not submit will be disqualified.\n\nAll the best!\nTeam Contestly",
+          "date": "2026-10-09T10:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": true,
+      "note": "Hackathon reminder for a team that already qualified: real submission deadline, so action needed even though it is automated."
+    },
+    {
+      "id": "t15",
+      "messages": [
+        { "from": "Karan Malhotra <karan.m@example.com>", "from_me": false,
+          "subject": "Sunday dinner for Ishita's bday?",
+          "body": "Guys, planning dinner at Grill House tomorrow (Sunday, 11 Oct) at 8 PM for Ishita's birthday. Don't tell her!! Are you coming? Need to know so I can book the table.",
+          "date": "2026-10-09T20:10:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Dev Patel <devp@example.com>", "from_me": false,
+          "subject": "Re: Sunday dinner for Ishita's bday?",
+          "body": "I'm in! 🙌 Aarav??",
+          "date": "2026-10-09T21:30:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": true, "urgency": "today", "date_kind": "event" },
+      "hard": true,
+      "note": "Friends asking a yes/no question; dinner is tomorrow so reply today. Event date, not a deadline."
+    },
+    {
+      "id": "t16",
+      "messages": [
+        { "from": "Ananya Rao <ananya.rao@example.com>", "from_me": false,
+          "subject": "calculator pls 🙏",
+          "body": "Hey can I borrow your Casio fx-991 for my maths exam on Monday? Mine stopped working 😭",
+          "date": "2026-10-08T22:00:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Aarav Sharma <aarav.sharma@example.com>", "from_me": true,
+          "subject": "Re: calculator pls 🙏",
+          "body": "Sure! Take it from my room tomorrow, I'll leave it with Raghav.",
+          "date": "2026-10-08T22:15:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": true,
+      "note": "Friend's question already answered by the recipient (latest is from_me), so no action. The Monday exam is the friend's, not the user's."
+    },
+    {
+      "id": "t17",
+      "messages": [
+        { "from": "Examination Section <examsection@college.example.edu>", "from_me": false,
+          "subject": "Mid-Sem exam registration closes Monday, 12 Oct, 5 PM",
+          "body": "Dear Students,\n\nAll students must complete Mid-Semester exam registration on the ERP portal (Academics > Exam Registration) by Monday, 12 October 2026, 5:00 PM. Admit cards will NOT be issued to students who have not registered.\n\nExamination Section",
+          "date": "2026-10-07T12:00:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Mandatory registration with a deadline (contrast with the timetable event in t07)."
+    },
+    {
+      "id": "t18",
+      "messages": [
+        { "from": "Volt Mobile <ebill@voltmobile.example.in>", "from_me": false,
+          "subject": "Your Volt Postpaid bill for September 2026: ₹449",
+          "body": "Dear Aarav,\n\nYour Volt Postpaid bill for 98XXXXXX21 has been generated.\n\nAmount due: ₹449.00\nDue date: 15 October 2026\n\nPay via UPI, card or net banking in the Volt app. Late payment charges of ₹100 apply after the due date.\n\nTeam Volt",
+          "date": "2026-10-05T09:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Unpaid bill due in 5 days."
+    },
+    {
+      "id": "t19",
+      "messages": [
+        { "from": "ShopKart <shipment-tracking@shopkart.example.com>", "from_me": false,
+          "subject": "Delayed: Your SoundMax earphones will now arrive by Tue, 13 Oct",
+          "body": "Hi Aarav,\n\nWe're sorry! Your order #SK-40912877 (SoundMax Airdopes 141) has been delayed due to heavy volumes at our Bhopal hub. New expected delivery: Tuesday, 13 October.\n\nNo action is needed from you. Track order\n\nShopKart",
+          "date": "2026-10-09T17:45:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "notifications", "needs_action": false, "urgency": "sometime", "date_kind": "event" },
+      "hard": true,
+      "note": "Delivery delay: information only. The new delivery date is something that happens on a date (event); 'none' is also defensible."
+    },
+    {
+      "id": "t20",
+      "messages": [
+        { "from": "Bazaar.in <shipment-update@bazaar.example.in>", "from_me": false,
+          "subject": "Delivered: Your package with 'Clean Code' has been delivered",
+          "body": "Hi Aarav, your package was delivered on Thursday at 3:05 PM and handed to the security guard at Boys Hostel 3. Order #402-8812094.\n\nHow was your delivery? Rate it.",
+          "date": "2026-10-08T15:10:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "notifications", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Delivery done; nothing to do."
+    },
+    {
+      "id": "t21",
+      "messages": [
+        { "from": "Pictogram <security@mail.pictogram.example.com>", "from_me": false,
+          "subject": "Your Pictogram account has been temporarily locked",
+          "body": "Hi aarav.codes,\n\nWe noticed unusual login attempts on your account from a device we don't recognise, so we've temporarily locked it to keep it safe.\n\nTo get back in, open the Pictogram app and confirm your identity within 48 hours. If you don't confirm in time, your account may be permanently disabled.\n\nWe will never ask for your password by email.\n\nThe Pictogram Security Team",
+          "date": "2026-10-10T06:20:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": true, "category": "notifications", "needs_action": true, "urgency": "immediately", "date_kind": "deadline" },
+      "hard": true,
+      "note": "Real account-suspension notice (official domain, points to the app, not a link): fix the account problem now; 48 hours makes it a deadline."
+    },
+    {
+      "id": "t22",
+      "messages": [
+        { "from": "Bharat Bank Alert <security@bharatbank-kyc-verify.example.xyz>", "from_me": false,
+          "subject": "URGENT: Your Bharat Bank account will be BLOCKED in 24 hrs",
+          "body": "Dear Valued Customer,\n\nYour KYC is pending and your account will be BLOCKED today. Update your PAN details IMMEDIATELY to avoid suspension.\n\nClick here: http://bharatbank-kyc.example.xyz/update\n\nEnter your Net Banking User ID, Password and the OTP you receive to complete verification.\n\nRegards,\nBharat Bank KYC Department",
+          "date": "2026-10-10T05:12:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": true, "category": "finance", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": true,
+      "note": "Phishing: lookalike domain (not bharatbank.example.in as in t08/t23) and asks for password and OTP. It poses as an account-access alert (security yes), but the user must not act: no action, ignore, and the fake 24h is no real deadline. Category could be notifications."
+    },
+    {
+      "id": "t23",
+      "messages": [
+        { "from": "Bharat Bank <service@bharatbank.example.in>", "from_me": false,
+          "subject": "Periodic KYC update due for your savings account",
+          "body": "Dear Aarav Sharma,\n\nAs per RBI guidelines, a periodic KYC update is due for your savings account ending 4821. Please update it by 31 October 2026 by visiting your home branch or through the Bharat Bank mobile app (Profile > Update KYC).\n\nIf KYC is not updated, transactions on the account may be restricted.\n\nBharat Bank will never ask for your password, PIN or OTP over email or phone.\n\nBharat Bank",
+          "date": "2026-10-06T11:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": true, "urgency": "sometime", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Real bank KYC request (contrast with phishing t22): action with a deadline 3 weeks out, so sometime."
+    },
+    {
+      "id": "t24",
+      "messages": [
+        { "from": "Pooja Nair <pooja.nair@cloudnest.example.com>", "from_me": false,
+          "subject": "Offer Letter – Summer Internship 2027, CloudNest",
+          "body": "Dear Aarav,\n\nWe are delighted to offer you a Summer Internship at CloudNest (May–July 2027, Bengaluru) with a stipend of ₹60,000/month. Please find the offer letter attached.\n\nKindly sign and return the offer letter by 15 October 2026 to confirm your acceptance.\n\nWarm regards,\nPooja Nair\nHR, CloudNest",
+          "date": "2026-10-05T17:00:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Pooja Nair <pooja.nair@cloudnest.example.com>", "from_me": false,
+          "subject": "RE: Offer Letter – Summer Internship 2027, CloudNest",
+          "body": "Hi Aarav,\n\nGentle reminder to send the signed offer letter by 15 October. Let me know if you have any questions.\n\nRegards,\nPooja",
+          "date": "2026-10-09T11:30:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Sign and return the offer by 15 Oct."
+    },
+    {
+      "id": "t25",
+      "messages": [
+        { "from": "Zentro Careers <no-reply@careers.zentro.example.com>", "from_me": false,
+          "subject": "Thank you for applying – Data Analyst Intern",
+          "body": "Hi Aarav,\n\nThanks for applying for the Data Analyst Intern role at Zentro. We've received your application and our team will review it. If your profile matches, we'll reach out with next steps.\n\nZentro Talent Team\n\nThis is an automated message, please do not reply.",
+          "date": "2026-10-08T13:20:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Confirmation of something already done."
+    },
+    {
+      "id": "t26",
+      "messages": [
+        { "from": "CodeArena <noreply@codearena.example.com>", "from_me": false,
+          "subject": "Invitation: Quantix Online Assessment – SDE Intern 2027",
+          "body": "Hi Aarav,\n\nQuantix has invited you to take their online assessment for the SDE Intern 2027 role.\n\nDuration: 90 minutes (3 coding questions)\nTest window closes: 10 October 2026, 11:59 PM IST\n\nOnce started, the test cannot be paused. Use a laptop with a stable connection and webcam on.\n\nStart test\n\nGood luck!\nCodeArena on behalf of Quantix",
+          "date": "2026-10-08T13:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": true, "urgency": "today", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Assessment window closes tonight."
+    },
+    {
+      "id": "t27",
+      "messages": [
+        { "from": "Vikram Sethi <vikram@talentbridge.example.com>", "from_me": false,
+          "subject": "Backend internship at a fintech – quick chat this week?",
+          "body": "Hi Aarav,\n\nI'm a recruiter at TalentBridge. I came across your GitHub (the UPI-split project was neat!). One of our clients, a Series-B fintech in Bengaluru, is hiring backend interns (Node.js/Go) for summer 2027.\n\nWould you be open to a 15-minute call this week? Just reply with a time that works and your updated resume.\n\nThanks,\nVikram Sethi\nTalentBridge Recruiting",
+          "date": "2026-10-09T12:40:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": true, "urgency": "this_week", "date_kind": "none" },
+      "hard": true,
+      "note": "Personal recruiter outreach asking for a reply (unlike the job newsletter t05). Unsolicited, so some would say no action needed; the definition's 'reply to a person' makes it action."
+    },
+    {
+      "id": "t28",
+      "messages": [
+        { "from": "Training & Placement Cell <tnp@college.example.edu>", "from_me": false,
+          "subject": "[Placement] Infotek campus drive – register by 6 PM TODAY",
+          "body": "Dear Students,\n\nInfotek Systems will conduct a campus drive for the B.Tech 2027 batch on 16 October 2026.\n\nEligibility: CGPA ≥ 7.0, no active backlogs.\nRole: Systems Engineer, CTC ₹6.5 LPA\n\nEligible and interested students must register on the placement portal by 6:00 PM TODAY (10 October). Late registrations will not be accepted under any circumstances.\n\nT&P Cell",
+          "date": "2026-10-10T09:00:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": true, "urgency": "today", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Registration closes today; the registration deadline matters more than the drive date."
+    },
+    {
+      "id": "t29",
+      "messages": [
+        { "from": "Training & Placement Cell <tnp@college.example.edu>", "from_me": false,
+          "subject": "Pre-placement talk by Quantix – Tue, 13 Oct, 4 PM (Seminar Hall)",
+          "body": "Dear Students,\n\nQuantix will hold a pre-placement talk on Tuesday, 13 October 2026 at 4:00 PM in the Main Seminar Hall (also streamed on Teams). The team will talk about their engineering culture and the intern hiring process.\n\nAttendance is optional but recommended for students who have applied.\n\nT&P Cell",
+          "date": "2026-10-09T15:00:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": false, "urgency": "sometime", "date_kind": "event" },
+      "hard": false,
+      "note": "Optional talk/webinar invitation: event, no action."
+    },
+    {
+      "id": "t30",
+      "messages": [
+        { "from": "Riya Desai <riya.desai@zentro.example.com>", "from_me": false,
+          "subject": "Documents for your application – Data Analyst Intern",
+          "body": "Hi Aarav,\n\nThanks for your interest in Zentro. Could you send us your updated resume and latest semester grade card so we can move your application forward?\n\nThanks,\nRiya Desai\nHR, Zentro",
+          "date": "2026-10-08T16:40:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Aarav Sharma <aarav.sharma@example.com>", "from_me": true,
+          "subject": "Re: Documents for your application – Data Analyst Intern",
+          "body": "Hi Riya,\n\nPFA my updated resume and the Semester 5 grade card. Happy to share anything else you need.\n\nThanks,\nAarav",
+          "date": "2026-10-08T18:05:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "jobs", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Recipient already sent the documents (latest is from_me)."
+    },
+    {
+      "id": "t31",
+      "messages": [
+        { "from": "Accounts Section <accounts@college.example.edu>", "from_me": false,
+          "subject": "Semester fee OVERDUE – late fine ₹100/day since 6 Oct",
+          "body": "Dear Aarav Sharma (Roll No. 22CS1047),\n\nOur records show that your Odd Semester 2026 fee of ₹62,500 is unpaid. The last date was 5 October 2026. A late fine of ₹100 per day is being charged from 6 October.\n\nPay immediately through ERP > Fees > Pay Online. Students with unpaid fees will not be allowed to sit the mid-semester examinations.\n\nAccounts Section",
+          "date": "2026-10-08T10:30:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": true, "urgency": "today", "date_kind": "deadline" },
+      "hard": true,
+      "note": "Bill already overdue with a fine growing daily: pay today. Sent by the college but it is about payment, so finance, not academic. The deadline is in the past."
+    },
+    {
+      "id": "t32",
+      "messages": [
+        { "from": "ShopKart Refunds <refunds@shopkart.example.com>", "from_me": false,
+          "subject": "Refund of ₹1,299 initiated for your return",
+          "body": "Hi Aarav,\n\nWe've picked up your return for order #SK-40733120 (Urban Denim Jacket). A refund of ₹1,299 has been initiated to your original payment method (UPI) and should reflect in 5–7 business days.\n\nShopKart",
+          "date": "2026-10-07T12:45:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Refund confirmation from a shopping app: a money movement, so finance (notifications is close)."
+    },
+    {
+      "id": "t33",
+      "messages": [
+        { "from": "Bharat Bank <estatements@bharatbank.example.in>", "from_me": false,
+          "subject": "Your Bharat Bank account statement for September 2026",
+          "body": "Dear Customer,\n\nYour e-statement for savings account ending 4821 for the period 01-09-2026 to 30-09-2026 is attached. The PDF is password-protected with the first four letters of your name and your date of birth (DDMM).\n\nBharat Bank",
+          "date": "2026-10-03T08:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Routine statement; mentions a PDF password hint but it is not an account-access email."
+    },
+    {
+      "id": "t34",
+      "messages": [
+        { "from": "Bharat Bank Alerts <alerts@bharatbank.example.in>", "from_me": false,
+          "subject": "OTP for your transaction at STYLEKART",
+          "body": "482913 is the OTP for your transaction of Rs 2,499.00 at STYLEKART on your Bharat Bank Debit Card ending 7710. Valid for 5 minutes. Do not share it with anyone. If not initiated by you, call 1800-000-0000.",
+          "date": "2026-10-07T20:05:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": true, "category": "finance", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": true,
+      "note": "OTP from 3 days ago, long expired: still security, but nothing to do now. Bank sender so finance. Contrast with fresh OTP t10."
+    },
+    {
+      "id": "t35",
+      "messages": [
+        { "from": "Melodi Premium <billing@melodi.example.com>", "from_me": false,
+          "subject": "Your Premium Student plan renews on 15 Oct",
+          "body": "Hi Aarav,\n\nJust a heads-up: your Melodi Premium Student plan renews on 15 October 2026. ₹59 will be charged to your UPI AutoPay mandate.\n\nNo action is needed to keep listening. If you'd like to cancel, do it before 15 October from Account > Manage plan.\n\nMelodi",
+          "date": "2026-10-08T10:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": false, "urgency": "sometime", "date_kind": "event" },
+      "hard": true,
+      "note": "Subscription renewal notice: an upcoming charge (finance), explicitly no action needed. The renewal happens on 15 Oct (event); deadline is arguable because of the optional cancel-before."
+    },
+    {
+      "id": "t36",
+      "messages": [
+        { "from": "RideOn <receipts@rideon.example.in>", "from_me": false,
+          "subject": "Your Friday evening trip with RideOn – ₹186",
+          "body": "Thanks for riding with Suresh, Aarav!\n\nTotal: ₹186.00 (paid via UPI)\nCollege Main Gate → DB Mall, 7.4 km, 24 min\n9 October 2026, 6:12 PM\n\nRate your ride",
+          "date": "2026-10-09T18:40:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "finance", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Payment receipt."
+    },
+    {
+      "id": "t37",
+      "messages": [
+        { "from": "Papa <rajesh.sharma@example.com>", "from_me": false,
+          "subject": "Photos from Chintu bhaiya's wedding",
+          "body": "Beta,\n\nSending some photos from the wedding. Everyone missed you, Dadi was asking about you. Mummy says eat properly and don't stay up late.\n\nPapa\n\n[12 attachments]",
+          "date": "2026-10-06T21:00:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": false, "urgency": "sometime", "date_kind": "none" },
+      "hard": false,
+      "note": "Family sharing photos; nice to see, no ask."
+    },
+    {
+      "id": "t38",
+      "messages": [
+        { "from": "Sneha Kulkarni <sneha.k@example.com>", "from_me": false,
+          "subject": "Long time!! 🙂",
+          "body": "Hey Aarav!\n\nSaw on Insta that you're doing well at college. I'll be in your city for a conference sometime next month, would love to catch up if you're free. How have you been? What's new?\n\nSneha",
+          "date": "2026-10-07T19:30:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": true, "urgency": "sometime", "date_kind": "none" },
+      "hard": false,
+      "note": "Old friend expects a reply but with no time pressure; 'next month' is not a specific date."
+    },
+    {
+      "id": "t39",
+      "messages": [
+        { "from": "Aarav Sharma <aarav.sharma@example.com>", "from_me": true,
+          "subject": "wifi?",
+          "body": "Did you renew the room wifi? It stopped working last night.",
+          "date": "2026-10-08T23:10:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Raghav Menon <raghav.menon@example.com>", "from_me": false,
+          "subject": "Re: wifi?",
+          "body": "Yes paid ₹600 for this month, should be working now. Send your half (₹300) on UPI when you can, my ID is raghav@okexample.",
+          "date": "2026-10-09T08:20:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": true, "urgency": "sometime", "date_kind": "none" },
+      "hard": true,
+      "note": "Payment request from a roommate: category personal (friend), not finance; must pay, but 'when you can' means no rush. Latest message is from the friend, not from_me."
+    },
+    {
+      "id": "t40",
+      "messages": [
+        { "from": "Aarav Sharma <aarav.sharma@example.com>", "from_me": true,
+          "subject": "Diwali",
+          "body": "Didi, are you coming home for Diwali this year?",
+          "date": "2026-10-04T20:00:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Kavya Sharma <kavya.sharma@example.com>", "from_me": false,
+          "subject": "Re: Diwali",
+          "body": "Yes!! Finally got leave 😄 Tell me what you want from Pune, I'll get it for you.",
+          "date": "2026-10-06T13:15:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": true, "urgency": "sometime", "date_kind": "none" },
+      "hard": false,
+      "note": "Sister asks a question; reply is needed but not urgent."
+    },
+    {
+      "id": "t41",
+      "messages": [
+        { "from": "Aditya Sharma <aditya.sh@example.com>", "from_me": false,
+          "subject": "Happy Birthday bro!! 🎂",
+          "body": "Many many happy returns of the day bhai! Have a great year ahead. Party kab de raha hai? 😂",
+          "date": "2026-10-09T23:50:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "personal", "needs_action": false, "urgency": "sometime", "date_kind": "none" },
+      "hard": false,
+      "note": "Birthday wish; a thank-you is polite, not required, and the 'party' line is a joke."
+    },
+    {
+      "id": "t42",
+      "messages": [
+        { "from": "CodeHub <noreply@codehub.example.com>", "from_me": false,
+          "subject": "[CodeHub] Please reset your password",
+          "body": "We heard that you lost your CodeHub password. Sorry about that!\n\nUse the following link to reset your password within 3 hours: https://codehub.example.com/password_reset/••••••\n\nIf you didn't request this, you can ignore this email.",
+          "date": "2026-10-09T22:35:00+05:30", "gmail_tab": "updates", "bulk": false },
+        { "from": "CodeHub <noreply@codehub.example.com>", "from_me": false,
+          "subject": "[CodeHub] Your password was changed",
+          "body": "Hello aarav-codes,\n\nThe password for your CodeHub account was successfully changed at 10:39 PM IST.\n\nIf you did this, you can safely ignore this email. If you didn't, please reset your password immediately and contact support.",
+          "date": "2026-10-09T22:40:00+05:30", "gmail_tab": "updates", "bulk": false }
+      ],
+      "labels": { "security": true, "category": "notifications", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "User-initiated password reset, then a confirmation: security, but already done."
+    },
+    {
+      "id": "t43",
+      "messages": [
+        { "from": "DocuSafe <noreply@docusafe.example.gov.in>", "from_me": false,
+          "subject": "Document issued: Class XII Marksheet",
+          "body": "Dear Aarav Sharma,\n\nA new document 'Class XII Marksheet (2022)' has been issued to your DocuSafe account by the State Board. You can view it under Issued Documents.\n\nTeam DocuSafe",
+          "date": "2026-10-04T11:20:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "notifications", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Automated account notice."
+    },
+    {
+      "id": "t44",
+      "messages": [
+        { "from": "IndiRail <tickets@indirail.example.in>", "from_me": false,
+          "subject": "Booking Confirmed: PNR 4521367890 – Bhopal to New Delhi, 20 Oct",
+          "body": "Dear Aarav Sharma,\n\nYour e-ticket is confirmed.\n\nPNR: 4521367890\nTrain: 12001 Shatabdi Express\nFrom: Bhopal Jn (BPL) 15:15, 20-Oct-2026\nTo: New Delhi (NDLS) 23:00\nCoach C4, Seat 37\nFare: ₹1,385 (paid)\n\nCarry a valid photo ID during the journey.\n\nIndiRail",
+          "date": "2026-10-06T14:30:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "notifications", "needs_action": false, "urgency": "sometime", "date_kind": "event" },
+      "hard": false,
+      "note": "Ticket confirmation (no action) for a journey on 20 Oct (event). It includes a fare, so finance is a possible second reading."
+    },
+    {
+      "id": "t45",
+      "messages": [
+        { "from": "Calendar <calendar-notification@example.com>", "from_me": false,
+          "subject": "Reminder: Dentist – Dr. Shah @ Sat 10 Oct 2026 5pm – 5:30pm (IST)",
+          "body": "Dentist – Dr. Shah\nSaturday 10 Oct 2026 · 5pm – 5:30pm (India Standard Time)\nWhere: Smile Dental Clinic, MP Nagar\n\nYou are receiving this reminder because you set a notification for this event.",
+          "date": "2026-10-10T09:00:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "notifications", "needs_action": false, "urgency": "today", "date_kind": "event" },
+      "hard": false,
+      "note": "Automated reminder of an appointment today."
+    },
+    {
+      "id": "t46",
+      "messages": [
+        { "from": "College ERP <erp-noreply@college.example.edu>", "from_me": false,
+          "subject": "Your ERP password expires in 3 days",
+          "body": "Dear 22CS1047,\n\nYour College ERP password will expire on 13 October 2026. Change it from Profile > Security > Change Password before then to avoid being locked out of the portal (fees, exam registration and results).\n\nThis is a system-generated email.",
+          "date": "2026-10-10T06:00:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": true, "category": "notifications", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Password/account-access notice with a deadline. College sender, but it is an account notice, not coursework."
+    },
+    {
+      "id": "t47",
+      "messages": [
+        { "from": "Rohan Gupta (via Google Drive) <drive-shares-noreply@example.com>", "from_me": false,
+          "subject": "Folder shared with you: \"SE Project – Sprint 2\"",
+          "body": "Rohan Gupta (rohan.g@example.com) has shared the following folder:\n\nSE Project – Sprint 2\n\nOpen\n\nGoogle Drive: Have all your files within reach from any device.",
+          "date": "2026-10-09T13:00:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "notifications", "needs_action": false, "urgency": "sometime", "date_kind": "none" },
+      "hard": true,
+      "note": "Automated share notice about a course project: notifications by form, but academic by topic is a reasonable reading. No ask in it."
+    },
+    {
+      "id": "t48",
+      "messages": [
+        { "from": "Pictogram <no-reply@mail.pictogram.example.com>", "from_me": false,
+          "subject": "priya.k and 4 others liked your post",
+          "body": "priya.k, dev_patel and 3 others liked your post from Thursday. See what else you've missed on Pictogram.\n\nUnsubscribe",
+          "date": "2026-10-09T19:25:00+05:30", "gmail_tab": "social", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "notifications", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Social app activity alert."
+    },
+    {
+      "id": "t49",
+      "messages": [
+        { "from": "Dr. A. Banerjee, HoD CSE <hod.cse@college.example.edu>", "from_me": false,
+          "subject": "Attendance shortage – Engineering Mathematics III (68%)",
+          "body": "Dear Aarav Sharma (22CS1047),\n\nYour attendance in Engineering Mathematics III is 68%, below the mandatory 75%. Meet me in the HoD office with a valid reason or medical certificate by Tuesday, 13 October 2026. Otherwise you will be debarred from the mid-semester examination in this subject.\n\nDr. A. Banerjee\nHead, Dept. of CSE",
+          "date": "2026-10-08T12:15:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Must meet the HoD by Tuesday."
+    },
+    {
+      "id": "t50",
+      "messages": [
+        { "from": "Prof. R. Mehta <rmehta@college.example.edu>", "from_me": false,
+          "subject": "Lab 4 report missing",
+          "body": "Aarav, your DBMS Lab 4 report isn't on Moodle. Please mail it to me.\n\nRM",
+          "date": "2026-10-09T11:00:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Aarav Sharma <aarav.sharma@example.com>", "from_me": true,
+          "subject": "Re: Lab 4 report missing",
+          "body": "Sorry sir, the Moodle upload failed. Attaching the PDF here.\n\nRegards,\nAarav (22CS1047)",
+          "date": "2026-10-09T12:10:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Professor's request already fulfilled; latest is from_me."
+    },
+    {
+      "id": "t51",
+      "messages": [
+        { "from": "Academic Office <academics@college.example.edu>", "from_me": false,
+          "subject": "Mandatory: Mid-term course feedback – submit by 16 Oct",
+          "body": "Dear Students,\n\nMid-term course feedback for all Odd Semester 2026 courses is now open on the ERP (Academics > Feedback). Submit feedback for every registered course by Friday, 16 October 2026.\n\nMid-semester results will be visible only to students who have submitted feedback.\n\nAcademic Office",
+          "date": "2026-10-09T10:30:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": true, "urgency": "this_week", "date_kind": "deadline" },
+      "hard": false,
+      "note": "Mandatory form with a deadline in 6 days."
+    },
+    {
+      "id": "t52",
+      "messages": [
+        { "from": "Dept. of CSE <cse.office@college.example.edu>", "from_me": false,
+          "subject": "Guest lecture: 'LLMs in Production' – Wed, 14 Oct, 3 PM",
+          "body": "Dear Students,\n\nThe Department of CSE is organising a guest lecture, 'LLMs in Production: Lessons from Indian Startups', by Dr. Meera Joshi on Wednesday, 14 October 2026, 3:00 PM in Seminar Hall 2.\n\nAll students are encouraged to attend.\n\nCSE Office",
+          "date": "2026-10-08T16:00:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": false, "urgency": "sometime", "date_kind": "event" },
+      "hard": false,
+      "note": "Optional department event: an invitation, no action."
+    },
+    {
+      "id": "t53",
+      "messages": [
+        { "from": "Moodle – College LMS <noreply@lms.college.example.edu>", "from_me": false,
+          "subject": "Grade released: Operating Systems – Quiz 2",
+          "body": "Hi Aarav,\n\nYour grade for 'Quiz 2 (Process Scheduling)' in Operating Systems (CS301) has been released: 8.5 / 10.\n\nView feedback\n\nYou are receiving this because you are enrolled in CS301. Notification preferences",
+          "date": "2026-10-09T17:05:00+05:30", "gmail_tab": "updates", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": false, "urgency": "sometime", "date_kind": "none" },
+      "hard": true,
+      "note": "Automated LMS email, but the topic is coursework (quiz grade), so academic beats notifications."
+    },
+    {
+      "id": "t54",
+      "messages": [
+        { "from": "Rohan Gupta <rohan.g@example.com>", "from_me": false,
+          "subject": "SE project – your module?",
+          "body": "Bro, have you finished the login + auth module? Monday's demo with Prof. Iyer is at 11.",
+          "date": "2026-10-09T21:00:00+05:30", "gmail_tab": "primary", "bulk": false },
+        { "from": "Rohan Gupta <rohan.g@example.com>", "from_me": false,
+          "subject": "Re: SE project – your module?",
+          "body": "?? reply bro. Please push it to GitHub by tonight, I'll merge everything Sunday morning and we'll test.",
+          "date": "2026-10-10T08:40:00+05:30", "gmail_tab": "primary", "bulk": false }
+      ],
+      "labels": { "security": false, "category": "academic", "needs_action": true, "urgency": "today", "date_kind": "deadline" },
+      "hard": true,
+      "note": "A friend writing, but about coursework, so academic, not personal. Push by tonight is a deadline; the Monday demo is an event too."
+    },
+    {
+      "id": "t55",
+      "messages": [
+        { "from": "The Byte <hello@thebyte.example.com>", "from_me": false,
+          "subject": "☕ Chip wars, a new JS runtime, and 5 tools to try this weekend",
+          "body": "Good morning! Here's your Saturday byte:\n\n1. Why India's chip fabs are behind schedule\n2. A new JavaScript runtime claims 3x faster cold starts\n3. Five dev tools we loved this week\n\nRead in browser | Unsubscribe",
+          "date": "2026-10-10T07:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Newsletter."
+    },
+    {
+      "id": "t56",
+      "messages": [
+        { "from": "SkillUp Academy <events@skillup.example.com>", "from_me": false,
+          "subject": "FREE Masterclass: Crack SDE interviews at top product companies – Thu, 15 Oct, 7 PM",
+          "body": "Hi Aarav,\n\nJoin ex-FAANG engineer Arjun Rao LIVE for a free 90-minute masterclass on DSA patterns, system design basics and how to get referrals.\n\nThursday, 15 October, 7:00 PM IST\nLimited seats, register now!\n\nAll attendees get 30% off our Placement Pro course.\n\nRegister free | Unsubscribe",
+          "date": "2026-10-08T12:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "event" },
+      "hard": true,
+      "note": "Webinar invite that sells a course: promos even though the topic is jobs; an invitation, so no action; the webinar date is an event."
+    },
+    {
+      "id": "t57",
+      "messages": [
+        { "from": "Bharat Bank <offers@bharatbank.example.in>", "from_me": false,
+          "subject": "Aarav, you're pre-approved for a Personal Loan of ₹2,00,000!",
+          "body": "Dear Aarav,\n\nGood news! Based on your relationship with us, you are pre-approved for an instant personal loan of up to ₹2,00,000 at attractive interest rates. Zero paperwork, money in your account in 10 minutes.\n\nApply now in the Bharat Bank app.\n\n*T&C apply. To stop receiving offers, unsubscribe.",
+          "date": "2026-10-07T11:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Bank sender, but marketing, so promos and not finance."
+    },
+    {
+      "id": "t58",
+      "messages": [
+        { "from": "Bazaar.in <store-news@bazaar.example.in>", "from_me": false,
+          "subject": "Prime members: early access to the Great Festive Sale is LIVE",
+          "body": "Hi Aarav,\n\nAs a Prime member, you get 24-hour early access to the Great Festive Sale. Up to 80% off on mobiles, laptops and headphones + 10% instant discount with Bharat Bank cards.\n\nShop deals\n\nUnsubscribe",
+          "date": "2026-10-09T00:05:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Sale marketing."
+    },
+    {
+      "id": "t59",
+      "messages": [
+        { "from": "Nova Mobiles <news@novamobiles.example.com>", "from_me": false,
+          "subject": "The Nova 14 is here. Faster. Brighter. Yours.",
+          "body": "Introducing the all-new Nova 14 with a 120Hz AMOLED display and 100W charging. Now available to pre-book for just ₹1,000 – get free Nova Buds worth ₹2,999.\n\nPre-book now\n\nUnsubscribe",
+          "date": "2026-10-06T18:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Product launch."
+    },
+    {
+      "id": "t60",
+      "messages": [
+        { "from": "Rahul from LearnHub <rahul@learnhub.example.com>", "from_me": false,
+          "subject": "Quick question, Aarav",
+          "body": "Hi Aarav,\n\nI noticed you started signing up for our GATE 2027 CSE course but didn't finish. Is something holding you back?\n\nJust hit reply and tell me, I read every response personally.\n\nCheers,\nRahul\nStudent Success, LearnHub\n\nP.S. Your 40% scholarship expires this Sunday.\n\nUnsubscribe",
+          "date": "2026-10-09T10:15:00+05:30", "gmail_tab": "primary", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": true,
+      "note": "Automated nurture email made to look like a personal note (a person's name, 'quick question', lands in primary). It invites a reply but the recipient owes nothing; the 'scholarship expires' line is marketing pressure, not a deadline."
+    },
+    {
+      "id": "t61",
+      "messages": [
+        { "from": "Snacko Gold <gold@mail.snacko.example.com>", "from_me": false,
+          "subject": "Your Snacko Gold membership has expired 😢",
+          "body": "Hi Aarav,\n\nYour Gold membership expired on 4 October. You're missing out on free delivery and extra discounts at 20,000+ restaurants.\n\nRenew now at 60% OFF: just ₹99 for 3 months.\n\nRenew Gold | Unsubscribe",
+          "date": "2026-10-05T13:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Looks like an account notice but it is a win-back upsell."
+    },
+    {
+      "id": "t62",
+      "messages": [
+        { "from": "CourseWorld <recommendations@courseworld.example.org>", "from_me": false,
+          "subject": "Aarav, courses picked for you this week",
+          "body": "Based on your interests:\n\n- Machine Learning Specialisation\n- Data Structures in Java\n- Cloud Computing Basics\n\nEnrol for free, upgrade for a certificate.\n\nUnsubscribe",
+          "date": "2026-10-04T09:00:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Course marketing (education, but not the user's college courses)."
+    },
+    {
+      "id": "t63",
+      "messages": [
+        { "from": "ProLink <messages-noreply@prolink.example.com>", "from_me": false,
+          "subject": "Aarav, try Premium free for 1 month",
+          "body": "Stand out to recruiters. With ProLink Premium you can see who viewed your profile, send InMail to recruiters and get AI interview prep.\n\nStart your free month. Cancel anytime.\n\nUnsubscribe",
+          "date": "2026-10-07T08:30:00+05:30", "gmail_tab": "promotions", "bulk": true }
+      ],
+      "labels": { "security": false, "category": "promos", "needs_action": false, "urgency": "ignore", "date_kind": "none" },
+      "hard": false,
+      "note": "Upsell from a careers network; the recruiter wording does not make it jobs."
+    }
+  ]
+}
