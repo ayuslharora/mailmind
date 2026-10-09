@@ -46,12 +46,3 @@ export const syncEveryone = async (req, res) => {
   res.status(202).json({ message: "Sync started", users: users.length });
   for (const user of users) await syncUser(user._id);
 };
-
-// TEMPORARY: shows which addresses a request came through, to set
-// TRUST_PROXY_HOPS. Same secret as the scheduler. Remove after measuring.
-export const proxyCheck = (req, res) => {
-  if (!sameSecret(req.get("x-cron-secret"), process.env.CRON_SECRET)) {
-    return res.status(401).json({ message: "Not allowed" });
-  }
-  return res.json({ ip: req.ip, ips: req.ips, forwardedFor: req.get("x-forwarded-for") ?? null });
-};

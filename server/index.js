@@ -62,9 +62,14 @@ mongoose
 app.disable("x-powered-by");
 // On Render the request reaches Express through one proxy; this makes
 // req.ip the visitor's address, which the sign-in rate limit counts by.
-// Requests pass through Vercel and Render's proxies before reaching us; the
-// rate limits need the visitor's address, which sits that many hops back.
-if (process.env.NODE_ENV === "production") app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS) || 1);
+// The rate limits need the visitor's address. Measured on 9 October 2026, a
+// request through the site passes Vercel, Cloudflare and Render's own proxy,
+// so the visitor is 4 hops back. (Someone calling Render directly can fake
+// the extra hops; the limits that protect AI quota are per user, not per IP.)
+const PROXY_HOPS = 4;
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS) || PROXY_HOPS);
+}
 app.use(helmet());
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
