@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 const SIGN_IN_ERRORS = {
   failed: 'Sign-in did not finish. Please try again.',
@@ -37,6 +37,16 @@ function Landing() {
       >
         Sign in with Google
       </a>
+
+      <p className="mt-10 text-sm text-gray-500 dark:text-gray-400">
+        <Link to="/privacy" className="underline underline-offset-2">
+          Privacy policy
+        </Link>
+        {' · '}
+        <Link to="/terms" className="underline underline-offset-2">
+          Terms
+        </Link>
+      </p>
     </main>
   )
 }

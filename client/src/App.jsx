@@ -6,6 +6,8 @@ import Landing from './pages/Landing'
 import Today from './pages/Today'
 import Ask from './pages/Ask'
 import Email from './pages/Email'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 
 function App() {
   return (
@@ -44,6 +46,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
