@@ -16,9 +16,12 @@ const CATEGORIES = [
   ['Promotions', 0],
 ]
 
+// A bar is taped yellow where Mailmind acts on it: the winning category, or
+// a score past its threshold.
 function Meter({ name, p, cut, win }) {
+  const acts = win || (cut !== undefined && p >= cut)
   return (
-    <div className={`row${win ? ' win' : ''}`}>
+    <div className={`row${win ? ' win' : ''}${acts ? ' acts' : ''}`}>
       <span className="name">{name}</span>
       <div className="track-line">
         <div className="fill" data-p={p} />
@@ -64,7 +67,8 @@ function JevScene() {
         const t = still ? (p > a ? 1 : 0) : span(p, a + 0.03, a + 0.12)
         const k = settle(t)
         row.querySelectorAll('.fill').forEach((f) => {
-          f.style.transform = `scaleX(${clamp(Number(f.dataset.p) * k)})`
+          // Clipped, not scaled, so the stripes on a taped bar keep their angle.
+          f.style.clipPath = `inset(0 ${100 - clamp(Number(f.dataset.p) * k) * 100}% 0 0)`
         })
         row.querySelectorAll('.num').forEach((n) => {
           n.textContent = `${Math.round(clamp(Number(n.dataset.p) * k) * 100)}%`

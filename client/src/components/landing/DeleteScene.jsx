@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { clamp, ease, easeIn, reducedMotion, span, watchScroll } from './motion'
 
-// Scene 5: the black bar that hid secrets in scene 1 strikes through each
+// Scene 5: the tape that sealed secrets in scene 1 strikes through each
 // thing Mailmind stored, then shreds it. The list and its order follow
 // server/utils/deleteAccount.js (and the sync stop in deleteMe).
 const STORED = [
@@ -43,8 +43,11 @@ function DeleteScene() {
       for (const it of items) {
         const w = it.text.getBoundingClientRect().width + 8
         it.shred.style.width = `${w}px`
-        it.strips.forEach((s) => {
+        it.strips.forEach((s, k) => {
           s.el.style.width = `${w / STRIPS + 0.5}px`
+          // Line the stripes up across the strips, so it reads as one piece of tape.
+          s.el.style.backgroundSize = `${w}px 100%`
+          s.el.style.backgroundPosition = `${(-k * w) / STRIPS}px 0`
         })
       }
     }

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import '../components/landing/landing.css'
 import DeleteScene from '../components/landing/DeleteScene'
@@ -7,6 +7,7 @@ import Intro from '../components/landing/Intro'
 import JevScene from '../components/landing/JevScene'
 import RedactionScene from '../components/landing/RedactionScene'
 import SortScene from '../components/landing/SortScene'
+import TapeHero from '../components/landing/TapeHero'
 
 // three.js is large, so the map scene loads after the rest of the page.
 const MapScene = lazy(() => import('../components/landing/MapScene'))
@@ -17,18 +18,23 @@ const SIGN_IN_ERRORS = {
   'not-invited': 'Mailmind is invite-only for now, and this Google account is not on the list. Nothing was saved.',
 }
 
-// The landing page tells, in one scroll, what Mailmind does with an email:
-// redacts it, sends the AI only what is left, sorts it, makes it searchable,
+// The landing page opens on police tape, then tells, in one scroll, what
+// Mailmind does with an email: tapes over its secrets, sends the AI only what is left, sorts it, makes it searchable,
 // and deletes all of it on request.
 function Landing() {
   const [params] = useSearchParams()
   const error = SIGN_IN_ERRORS[params.get('signin')]
+  // The top bar turns dark while it sits over the dark opening.
+  const [onHero, setOnHero] = useState(true)
 
   return (
     <div className="landing">
       <Intro />
-      <header className="bar-top">
-        <div className="wordmark">Mailmind</div>
+      <header className={`bar-top${onHero ? ' dark' : ''}`}>
+        <div className="wordmark">
+          <span className="mark" aria-hidden="true">M</span>
+          Mailmind
+        </div>
         {/* A plain link, not axios: Google's sign-in page needs a full page visit. */}
         <a className="signin" href="/api/auth/google">
           Sign in with Google
@@ -40,6 +46,7 @@ function Landing() {
         </p>
       )}
 
+      <TapeHero onVisible={setOnHero} />
       <RedactionScene />
       <JevScene />
       <SortScene />

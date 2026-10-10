@@ -75,6 +75,19 @@ function MapScene() {
     g.arc(32, 32, 28, 0, Math.PI * 2)
     g.fill()
     const sprite = new THREE.CanvasTexture(dot)
+    // The question and the passages it reads: tape yellow, ringed in black.
+    const hotDot = document.createElement('canvas')
+    hotDot.width = hotDot.height = 64
+    const h = hotDot.getContext('2d')
+    h.fillStyle = '#FFD21F'
+    h.strokeStyle = '#000'
+    h.lineWidth = 7
+    h.beginPath()
+    h.arc(32, 32, 26, 0, Math.PI * 2)
+    h.fill()
+    h.stroke()
+    const hotSprite = new THREE.CanvasTexture(hotDot)
+    const hotDots = (size) => new THREE.PointsMaterial({ size, map: hotSprite, transparent: true, alphaTest: 0.4, opacity: 0 })
     const dots = (size, opacity = 1) =>
       new THREE.PointsMaterial({ size, map: sprite, transparent: true, alphaTest: 0.4, color: 0x000000, opacity })
     const buffer = (length) => {
@@ -88,10 +101,10 @@ function MapScene() {
     const cloudMat = dots(0.19, 0)
     scene.add(new THREE.Points(geo, cloudMat))
     const [nearPos, nearGeo] = buffer(NEAREST * 3)
-    const nearMat = dots(0.36, 0)
+    const nearMat = hotDots(0.4)
     scene.add(new THREE.Points(nearGeo, nearMat))
     const [qPos, qGeo] = buffer(3)
-    const qMat = dots(0.42, 0)
+    const qMat = hotDots(0.5)
     scene.add(new THREE.Points(qGeo, qMat))
     const [linePos, lineGeo] = buffer(NEAREST * 6)
     const lineMat = new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0 })
@@ -198,7 +211,7 @@ function MapScene() {
     const stop = watchScroll(track, render, layout)
     return () => {
       stop()
-      ;[geo, nearGeo, qGeo, lineGeo, cloudMat, nearMat, qMat, lineMat, sprite].forEach((x) => x.dispose())
+      ;[geo, nearGeo, qGeo, lineGeo, cloudMat, nearMat, qMat, lineMat, sprite, hotSprite].forEach((x) => x.dispose())
       renderer.dispose()
     }
   }, [])

@@ -1,18 +1,18 @@
 import { useEffect, useRef } from 'react'
 import { clamp, ease, easeInOut, reducedMotion, seeded, span, watchScroll } from './motion'
 
-// Scene 1: the email fills the screen; black bars hide its secrets as you
-// scroll; then its letters loosen and rearrange into the exact request the
+// Scene 1: the email fills the screen; as you scroll, a numbered evidence
+// marker lands on each secret and a strip of tape seals it off; then its letters loosen and rearrange into the exact request the
 // classifier is sent. The text was checked against the real redaction:
 // these values come out as [CARD], [ACCOUNT] and [PHONE], and it is not an
 // OTP email, so it really does go to the AI.
 const SENTENCE = [
   'Your new debit card ',
-  { tag: '[CARD]', real: '4523 7811 0492 4829' },
+  { tag: '[CARD]', real: '4523 7811 0492 4829', n: 1 },
   ' for account ',
-  { tag: '[ACCOUNT]', real: '50100234567812' },
+  { tag: '[ACCOUNT]', real: '50100234567812', n: 2 },
   ' is on its way. Activate it before 20 Oct. Questions? Call ',
-  { tag: '[PHONE]', real: '+91 98204 61735' },
+  { tag: '[PHONE]', real: '+91 98204 61735', n: 3 },
   '.',
 ]
 const JSON_BEFORE =
@@ -58,7 +58,12 @@ const letterSecret = (part, key) => (
   <span className="c secret" key={key}>
     {part.real}
     <span className="ink" aria-hidden="true">
-      <span className="tag">{part.tag}</span>
+      <span className="tape">
+        <span className="tag">{part.tag}</span>
+      </span>
+    </span>
+    <span className="tent" aria-hidden="true">
+      {part.n}
     </span>
   </span>
 )
@@ -116,6 +121,7 @@ function RedactionScene() {
       el,
       ink: el.querySelector('.ink'),
       tag: el.querySelector('.tag'),
+      tent: el.querySelector('.tent'),
     }))
     let k = 0
     const units = [...json.querySelectorAll('.c')].map((el, i) => {
@@ -165,9 +171,13 @@ function RedactionScene() {
       const still = reducedMotion()
       const snap = (t) => (still ? (t > 0.5 ? 1 : 0) : t)
 
-      // 1. One bar after another, 8%–52% of the scroll.
+      // 1. One secret after another, 8%–52% of the scroll: its marker drops,
+      // then the tape seals it.
       secrets.forEach((x, i) => {
         const a = 0.08 + i * 0.14
+        const drop = snap(span(p, a - 0.05, a))
+        x.tent.style.opacity = Math.min(span(drop, 0, 0.3), 1 - span(p, 0.56, 0.62))
+        x.tent.style.transform = `translateY(${-1.6 * (1 - ease(drop))}em) rotate(${-14 * (1 - ease(drop))}deg)`
         const t = snap(span(p, a, a + 0.12))
         x.ink.style.transform = `scaleX(${ease(t)})`
         x.tag.style.opacity = span(t, 0.75, 1)
@@ -212,7 +222,7 @@ function RedactionScene() {
 
   return (
     <>
-      <div className="track" ref={trackRef}>
+      <div className="track" id="story" ref={trackRef}>
         <div className="stage" ref={stageRef}>
           <article className="letter" ref={letterRef} aria-label="Example email from a bank about a new debit card">
             <p className="from" ref={fromRef}>
