@@ -1,26 +1,34 @@
 import { Link } from 'react-router-dom'
+import Brand from '../components/Brand'
+import Redacted from '../components/Redacted'
 
 const CONTACT = 'https://github.com/ayuslharora/mailmind/issues'
 
 function Section({ title, children }) {
   return (
-    <section className="mt-8">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="mt-2 space-y-2 text-gray-700 dark:text-gray-300">{children}</div>
+    <section className="mt-10">
+      <h2 className="flex items-center gap-3 text-xl font-bold">
+        <span aria-hidden="true" className="hazard-thin h-2 w-6 shrink-0" />
+        {title}
+      </h2>
+      <div className="mt-2 space-y-2 text-ink/80">{children}</div>
     </section>
   )
 }
 
 function Privacy() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-12">
-      <Link to="/" className="text-sm underline underline-offset-2">
-        ← Mailmind
-      </Link>
-      <h1 className="mt-4 text-3xl font-bold tracking-tight">Privacy policy</h1>
-      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Effective 9 October 2026</p>
+    <main className="mx-auto max-w-2xl px-4 pb-24 pt-6">
+      <header className="flex items-center justify-between gap-4 border-b border-rule pb-4">
+        <Brand />
+        <Link to="/" className="text-sm font-semibold underline underline-offset-2">
+          Back to Mailmind
+        </Link>
+      </header>
+      <h1 className="mt-12 text-5xl font-black uppercase leading-none condensed sm:text-6xl">Privacy policy</h1>
+      <p className="mt-4 font-mono text-xs uppercase tracking-[0.14em] text-grey">Effective 9 October 2026</p>
 
-      <p className="mt-6 text-gray-700 dark:text-gray-300">
+      <p className="mt-6 text-ink/80">
         Mailmind is a student project that sorts your Gmail inbox and answers questions about it. It is invite-only. This
         page explains exactly what it reads, stores and shares.
       </p>
@@ -41,7 +49,7 @@ function Privacy() {
         <p>
           On our server, before an email is saved or sent to any AI service, Mailmind replaces one-time passwords, card
           numbers, CVVs, PINs, Aadhaar and PAN numbers, bank account numbers, passwords, phone numbers, IP addresses and
-          sign-in or reset links with placeholders such as [OTP] or [CARD]. Your original, unredacted emails are never
+          sign-in or reset links with placeholders such as <Redacted text="[OTP]" /> or <Redacted text="[CARD]" />. Your original, unredacted emails are never
           stored. This removal is automatic and pattern-based, so unusual formats can occasionally be missed.
         </p>
       </Section>

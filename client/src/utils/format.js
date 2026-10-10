@@ -32,6 +32,14 @@ export function formatReceived(date) {
   return new Date(date).toLocaleDateString('en-IN', { timeZone: TIME_ZONE, day: 'numeric', month: 'short' })
 }
 
+// A day heading: "Today", "Yesterday", otherwise "Thu 8 Oct".
+export function formatDay(date) {
+  const days = daysFromToday(date)
+  if (days === 0) return 'Today'
+  if (days === -1) return 'Yesterday'
+  return new Date(date).toLocaleDateString('en-IN', { timeZone: TIME_ZONE, weekday: 'short', day: 'numeric', month: 'short' })
+}
+
 export function formatAgo(date) {
   if (!date) return 'never'
   const minutes = Math.round((Date.now() - new Date(date)) / 60000)

@@ -17,36 +17,34 @@ function Digest() {
     }
   }, [])
 
-  if (error) return <p className="mt-8 text-sm text-red-700 dark:text-red-300">{error}</p>
-  if (!digest) return <p className="mt-8 text-gray-500 dark:text-gray-400">Writing your digest…</p>
+  if (error) return <p className="mt-8 text-sm text-danger">{error}</p>
+  if (!digest) return <p className="mt-8 text-grey">Writing your digest…</p>
 
   return (
     <section className="mt-8">
-      <p className="text-lg font-medium">{digest.headline}</p>
+      <p className="text-2xl font-bold leading-snug text-balance">{digest.headline}</p>
       {digest.points.length > 0 && (
-        <ul className="mt-4 space-y-3">
-          {digest.points.map((point) => (
-            <li key={point.threadId} className="flex gap-2">
-              <span aria-hidden="true">•</span>
-              <span>
+        <ol className="mt-6 space-y-4">
+          {digest.points.map((point, i) => (
+            <li key={point.threadId} className="flex gap-4">
+              <span
+                aria-hidden="true"
+                className="tent grid h-[30px] w-[26px] shrink-0 place-items-end justify-center pb-1 text-sm font-black condensed"
+              >
+                {i + 1}
+              </span>
+              <span className="pt-1">
                 {point.text}{' '}
-                <a
-                  href={point.gmailUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm text-gray-500 underline underline-offset-2 dark:text-gray-400"
-                >
+                <a href={point.gmailUrl} target="_blank" rel="noreferrer" className="text-sm font-semibold text-grey underline underline-offset-2">
                   Open
                 </a>
               </span>
             </li>
           ))}
-        </ul>
+        </ol>
       )}
       {digest.sorting > 0 && (
-        <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
-          {digest.sorting} emails are still being sorted and are not in this digest yet.
-        </p>
+        <p className="mt-6 text-sm text-grey">{digest.sorting} emails are still being sorted and are not in this digest yet.</p>
       )}
     </section>
   )

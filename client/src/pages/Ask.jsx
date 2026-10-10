@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import axiosInstance from '../axiosCalls/axios'
+import AppBar from '../components/AppBar'
+import Redacted from '../components/Redacted'
 import { formatReceived } from '../utils/format'
 
-// Minimal on purpose: the front end will be redesigned.
 function Ask() {
   const [turns, setTurns] = useState([])
   const [question, setQuestion] = useState('')
@@ -21,8 +21,13 @@ function Ask() {
       { role: 'assistant', text: t.answer },
     ])
     try {
-      const { data } = await axiosInstance.post('/ask', { question: text, history })
-      setTurns((all) => [...all, { question: text, ...data }])
+      const { data } = await axiosInstance.post('/ask', {
+        question: text,
+        history,
+      })
+      // The reply also carries the question as rewritten for search; show and
+      // remember what was actually typed.
+      setTurns((all) => [...all, { ...data, question: text }])
       setQuestion('')
     } catch (err) {
       setError(err.response?.data?.message ?? 'Something went wrong. Please try again.')
@@ -32,60 +37,92 @@ function Ask() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Ask your inbox</h1>
-        <Link to="/today" className="text-sm underline underline-offset-2">
-          Today
-        </Link>
-      </header>
-
-      <ol className="mt-6 space-y-6">
-        {turns.map((turn, i) => (
-          <li key={i}>
-            <p className="font-medium">{turn.question}</p>
-            <p className="mt-1 text-gray-700 dark:text-gray-300">{turn.answer}</p>
-            {turn.citations.length > 0 && (
-              <ul className="mt-2 space-y-1 text-sm">
-                {turn.citations.map((c) => (
-                  <li key={c.gmailId}>
-                    <a href={c.gmailUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                      {c.subject || '(no subject)'}
-                    </a>{' '}
-                    <span className="text-gray-500 dark:text-gray-400">
-                      · {c.from} · {formatReceived(c.date)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ol>
-
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-red-700 dark:text-red-300">
-          {error}
+    <>
+      <AppBar />
+      <main className="mx-auto max-w-3xl px-4 pb-24 pt-8">
+        <h1 className="text-[44px] font-black uppercase leading-none condensed">Ask your inbox</h1>
+        <p className="mt-3 max-w-[52ch] text-grey">
+          Answers come from your redacted emails, and each one shows the emails it used. Hidden secrets stay hidden.
         </p>
-      )}
 
-      <form onSubmit={ask} className="mt-6 flex gap-2">
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="e.g. When is my Kaggle deadline?"
-          maxLength={500}
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900"
-        />
-        <button
-          type="submit"
-          disabled={asking || !question.trim()}
-          className="rounded-lg bg-gray-900 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-gray-900"
-        >
-          {asking ? 'Thinking…' : 'Ask'}
-        </button>
-      </form>
-    </main>
+        <ol className="mt-8 space-y-8">
+          {turns.map((turn, i) => (
+            // Yours on the right, Mailmind's on the left, like a chat.
+            <li key={i} className="space-y-3">
+              <div className="flex justify-end">
+                <p className="max-w-[80%] rounded-sm bg-ink px-4 py-2.5 font-semibold text-paper">{turn.question}</p>
+              </div>
+              <div className="max-w-[85%] rounded-sm border border-rule px-4 py-3">
+                <p className="text-lg leading-relaxed">
+                  <Redacted text={turn.answer} />
+                </p>
+                {turn.citations.length > 0 && (
+                  <div className="mt-3 border-t border-rule pt-3">
+                    <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-grey">Sources</p>
+                    <ol className="mt-2 space-y-2 text-sm">
+                      {turn.citations.map((c, n) => (
+                        <li key={c.gmailId} className="flex items-baseline gap-3">
+                          <span
+                            aria-hidden="true"
+                            className="tent grid h-5 w-[18px] shrink-0 place-items-end justify-center pb-0.5 text-[11px] font-black"
+                          >
+                            {n + 1}
+                          </span>
+                          <span>
+                            <a
+                              href={c.gmailUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-semibold underline underline-offset-2"
+                            >
+                              {c.subject || '(no subject)'}
+                            </a>{' '}
+                            <span className="text-grey">
+                              · {c.from} · {formatReceived(c.date)}
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        {asking && <div aria-hidden="true" className="hazard-crawl mt-8 h-1.5 rounded-full" />}
+
+        {error && (
+          <p role="alert" className="mt-6 flex overflow-hidden rounded-sm border border-ink/20 text-sm">
+            <span aria-hidden="true" className="hazard w-2.5 shrink-0" />
+            <span className="p-3">{error}</span>
+          </p>
+        )}
+
+        <form onSubmit={ask} className="mt-8 flex gap-3">
+          {/* The box sits on a strip of barrier tape, like the landing page's question. */}
+          <div className="relative flex-1">
+            <span aria-hidden="true" className="hazard absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-sm" />
+            <input
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="e.g. When is my Kaggle deadline?"
+              maxLength={500}
+              aria-label="Your question"
+              className="relative w-full rounded-sm border border-ink bg-paper px-4 py-3 text-[17px] outline-none placeholder:text-grey focus:border-2"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={asking || !question.trim()}
+            className="btn-tape rounded-sm px-5 font-bold disabled:opacity-50"
+          >
+            {asking ? 'Thinking…' : 'Ask'}
+          </button>
+        </form>
+      </main>
+    </>
   )
 }
 

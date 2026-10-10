@@ -1,14 +1,18 @@
 import { Link } from 'react-router-dom'
+import Brand from '../components/Brand'
 
 function Terms() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-12">
-      <Link to="/" className="text-sm underline underline-offset-2">
-        ← Mailmind
-      </Link>
-      <h1 className="mt-4 text-3xl font-bold tracking-tight">Terms of service</h1>
-      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Effective 9 October 2026</p>
-      <div className="mt-6 space-y-4 text-gray-700 dark:text-gray-300">
+    <main className="mx-auto max-w-2xl px-4 pb-24 pt-6">
+      <header className="flex items-center justify-between gap-4 border-b border-rule pb-4">
+        <Brand />
+        <Link to="/" className="text-sm font-semibold underline underline-offset-2">
+          Back to Mailmind
+        </Link>
+      </header>
+      <h1 className="mt-12 text-5xl font-black uppercase leading-none condensed sm:text-6xl">Terms of service</h1>
+      <p className="mt-4 font-mono text-xs uppercase tracking-[0.14em] text-grey">Effective 9 October 2026</p>
+      <div className="mt-6 space-y-4 text-ink/80">
         <p>
           Mailmind is a free student project, offered as it is, without any warranty. It is invite-only: only people
           the author has added can use it.
