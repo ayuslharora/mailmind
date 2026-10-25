@@ -150,3 +150,39 @@ test("several identifiers in one bank email", () => {
       "Beneficiary IFSC SBIN0001234. Never share your CVV [PIN] or OTP.",
   );
 });
+
+const upiIds = {
+  "name at a bank handle": ["UPI ID: aarav.sharma@okaxis", "UPI ID: [UPI]"],
+  "phone number at a handle": ["Pay 9876543210@ybl now", "Pay [UPI] now"],
+  "at the end of a sentence": ["Paid to swiggy@icici.", "Paid to [UPI]."],
+  "with a hyphen and digits": ["Send to aarav-21@paytm today", "Send to [UPI] today"],
+};
+for (const [name, [input, expected]] of Object.entries(upiIds)) {
+  test(`UPI ID hidden: ${name}`, () => assert.equal(redacted(input), expected));
+}
+
+test("email addresses are not UPI IDs", () => {
+  assert.equal(redacted("Write to aarav.sharma@example.com or help@hdfcbank.co.in."), "Write to aarav.sharma@example.com or help@hdfcbank.co.in.");
+  assert.equal(redacted("Follow @mailmind for updates"), "Follow @mailmind for updates");
+});
+
+const expiries = {
+  "expiry MM/YY": ["Card 1234 (expiry 08/28, CVV hidden)", "Card 1234 (expiry [EXPIRY], CVV hidden)"],
+  "valid thru with a colon": ["Valid thru: 12/2029", "Valid thru: [EXPIRY]"],
+  "exp with spaces": ["Exp. 08 / 28", "Exp. [EXPIRY]"],
+  "expires on": ["Your card expires on 01/27.", "Your card expires on [EXPIRY]."],
+};
+for (const [name, [input, expected]] of Object.entries(expiries)) {
+  test(`card expiry hidden: ${name}`, () => assert.equal(redacted(input), expected));
+}
+
+test("fractions, scores and impossible months are not expiry dates", () => {
+  assert.equal(redacted("You scored 08/28 in the quiz"), "You scored 08/28 in the quiz");
+  assert.equal(redacted("expiry 13/28"), "expiry 13/28");
+});
+
+test("a UPI ID or expiry alone does not make the email strict", () => {
+  const result = redactEmail({ subject: "Payment received", body: "Rs 249 from aarav@okaxis, order 48213975" });
+  assert.equal(result.strict, false);
+  assert.equal(result.body, "Rs 249 from [UPI], order 48213975");
+});

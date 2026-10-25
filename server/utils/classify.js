@@ -62,7 +62,7 @@ export const QUESTIONS = {
 };
 
 export const SYSTEM_PROMPT = `You sort one email thread for the person who received it.
-Secrets in the text were replaced before you saw it: [OTP] a one-time code, [CARD], [AADHAAR], [PAN], [ACCOUNT], [PIN], [PASSWORD], [PHONE], [IP], and [LINK:domain] for a removed link.
+Secrets in the text were replaced before you saw it: [OTP] a one-time code, [CARD], [AADHAAR], [PAN], [ACCOUNT], [PIN], [PASSWORD], [PHONE], [IP], [UPI], [EXPIRY] (a card's expiry date), and [LINK:domain] for a removed link.
 Facts worked out by the server: deadline_in_days is the days until the nearest upcoming date found in the latest message (null if none); gmail_category is Gmail's own tab; bulk_sender means it was sent by a mailing tool.
 Answer every question with honest probabilities between 0 and 1. Use 0 or 1 only when certain. For a choice, give every option a probability, adding up to 1.`;
 

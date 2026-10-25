@@ -1,7 +1,7 @@
 // Finds Indian and payment identifiers: card numbers, Aadhaar, PAN, bank
 // account numbers, PINs/CVVs, passwords written in plain text, and personal
-// details that are not secrets but should not reach an AI: IP addresses and
-// phone numbers.
+// details that are not secrets but should not reach an AI: IP addresses,
+// phone numbers, UPI IDs and card expiry dates.
 //
 // Checksums (Luhn for cards, Verhoeff for Aadhaar) separate real identifiers
 // from order and tracking numbers of the same length. About one random number
@@ -73,6 +73,14 @@ const IP = new RegExp(`(?<![\\w.])${OCTET}(?:\\.${OCTET}){3}(?!\\.?\\w)`, "g");
 const PHONE_INTERNATIONAL = /(?<![\w+])\+\d{1,3}(?:[\s-]?\d){7,12}(?![\w-])/g;
 const PHONE_LABELLED =
   /\b(?:mobile|mob|phone|ph|tel|telephone|whatsapp|contact)\b\.?(?:\s*(?:no|num|number)\b\.?)?\s*[:#-]?\s*(\d(?:[\s-]?\d){9,11})(?![\w-])/gid;
+// A UPI ID: name@handle, where the handle (the bank or app, e.g. okaxis, ybl)
+// has no dot. That is what tells it apart from an email address
+// (name@bank.com), which is left alone.
+const UPI = /(?<![\w.+-])[a-z0-9][\w.-]{1,255}@[a-z][a-z0-9]{1,63}\b(?![.-]?[a-z0-9@])/gi;
+// A card's expiry date after an expiry word: "expiry 08/28", "valid thru
+// 12/2029". Only real months, so a score such as 08/28 on its own is kept.
+const EXPIRY =
+  /\b(?:exp(?:iry|iration)?|expires?(?:\s+on)?|valid\s+(?:thru|through|till|until|upto))\b\.?(?:\s*date)?\s*[:=-]?\s*((?:0[1-9]|1[0-2])\s*\/\s*(?:20\d{2}|\d{2}))(?![\w/])/gid;
 // A password after "is", ":" or "=". \b only understands ASCII, so the Hindi
 // word is matched on its own.
 const PASSWORD =
@@ -114,6 +122,8 @@ export function findIdentifiers(text) {
     ...spansFromMatches(text, PHONE_LABELLED, "PHONE", () => true, 1),
     ...spansFromMatches(text, PIN, "PIN", () => true, 1),
     ...spansFromMatches(text, PASSWORD, "PASSWORD", looksLikePassword, 1),
+    ...spansFromMatches(text, UPI, "UPI"),
+    ...spansFromMatches(text, EXPIRY, "EXPIRY", () => true, 1),
   ];
 }
 
