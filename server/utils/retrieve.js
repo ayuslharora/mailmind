@@ -3,6 +3,7 @@
 // filtered to the user inside Atlas, so another user's mail is never a
 // candidate.
 import Chunk from "../models/chunk.model.js";
+import Thread from "../models/thread.model.js";
 import { getEmbeddings } from "./embeddings.js";
 
 export const VECTOR_INDEX = "chunks_vector";
@@ -52,6 +53,56 @@ export function listMatching(userId, filters, limit = LIST_LIMIT) {
     .sort({ date: -1 })
     .limit(limit)
     .lean();
+}
+
+// "What's due" with no dates given: the next two weeks. Up to 25 emails,
+// each cut to its start, so the whole list fits in one small prompt.
+const DUE_DAYS = 14;
+const DUE_LIMIT = 25;
+const DUE_CHARS = 400;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// The date as the Today view read it: "Due: Tue, 27 Oct, 5:00 pm".
+export function dueLine({ dueAt, dueHasTime, dateKind }) {
+  const when = dueAt.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    ...(dueHasTime && { hour: "numeric", minute: "2-digit" }),
+  });
+  return `${dateKind === "event" ? "Event" : "Due"}: ${when}`;
+}
+
+// "What's due this week": every email with a deadline or event in the range,
+// soonest first, from the dates the Today view uses. Not a similarity
+// search: a list question has no single best match, so the six nearest
+// chunks would miss most of the list. One chunk per email (its start), with
+// its date on the first line. Threads marked done are left out, and so are
+// promotions: "sale ends tonight" is not something due.
+export async function listDue(userId, { senders, after, before } = {}, now = new Date(), limit = DUE_LIMIT) {
+  const threads = await Thread.find({
+    userId,
+    status: "classified",
+    state: { $ne: "done" },
+    "classification.category": { $ne: "promos" },
+    "classification.promoCap": { $ne: true },
+    dueAt: { $gte: after ?? now, $lte: before ?? new Date(now.getTime() + DUE_DAYS * DAY_MS) },
+  })
+    .sort({ dueAt: 1 })
+    .limit(limit);
+  const chunks = await Chunk.find(
+    { userId, part: 0, gmailId: { $in: threads.map((t) => t.latestMessageId) }, ...(senders && { sender: { $in: senders } }) },
+    { embedding: 0 },
+  ).lean();
+  const byId = new Map(chunks.map((chunk) => [chunk.gmailId, chunk]));
+  return threads
+    .filter((thread) => byId.has(thread.latestMessageId))
+    .map((thread) => {
+      const chunk = byId.get(thread.latestMessageId);
+      const date = dueLine({ dueAt: thread.dueAt, dueHasTime: thread.dueHasTime, dateKind: thread.classification?.dateKind });
+      return { ...chunk, text: `${date}\n${chunk.text.slice(0, DUE_CHARS)}` };
+    });
 }
 
 // userId must be an ObjectId: aggregation stages are not cast by Mongoose.

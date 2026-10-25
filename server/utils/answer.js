@@ -4,7 +4,7 @@ import { ChatGroq } from "@langchain/groq";
 import { z } from "zod";
 import Message from "../models/message.model.js";
 import { estimateTokens, withGroqModels } from "./groqLimiter.js";
-import { listMatching, retrieve } from "./retrieve.js";
+import { listDue, listMatching, retrieve } from "./retrieve.js";
 import { senderMatches } from "./senders.js";
 import { senderAddress } from "./today.js";
 
@@ -12,9 +12,9 @@ export const NOT_FOUND = "I couldn't find this in your inbox.";
 const HISTORY_TURNS = 6;
 
 const SYSTEM_PROMPT = `You answer questions about the user's own email, using only the numbered sources given.
-Secrets were replaced before you saw the text: [OTP], [CARD], [AADHAAR], [PAN], [ACCOUNT], [PIN], [PASSWORD], [PHONE], [IP], and [LINK:domain] for a removed link. Never guess what they hid; say the value is hidden and the user can open the email.
+Secrets were replaced before you saw the text: [OTP], [CARD], [AADHAAR], [PAN], [ACCOUNT], [PIN], [PASSWORD], [PHONE], [IP], [UPI], [EXPIRY] (a card's expiry date), and [LINK:domain] for a removed link. Never guess what they hid; say the value is hidden and the user can open the email.
 Answer only from a source that is about the thing the question asks. If no source answers it, set found to false: a wrong answer is worse than none.
-List the numbers of the sources you used. Answer briefly, in plain language. Dates are in India time.`;
+List the numbers of the sources you used in sources, not in the answer text. Answer briefly, in plain language; a list gets one item per line. Dates are in India time.`;
 
 const answerSchema = z.object({
   found: z.boolean(),
@@ -29,13 +29,15 @@ const understandSchema = z.object({
   after: z.string().nullable(),
   before: z.string().nullable(),
   listAll: z.boolean(),
+  deadlines: z.boolean(),
 });
 
 const understandPrompt = (today) => `You prepare a question about the user's email for search. Today is ${today} (India).
 question: the user's last question, rewritten so it can be understood without the conversation. Words like it, that, this, they, there or "the other one" are replaced with what they refer to. Keep names, dates and numbers. Example: after a conversation about a failed Google One payment, "when did that happen?" becomes "When did my Google One payment fail?"
 sender: the person, company or newsletter the emails are from, in the user's words (e.g. "Kaggle", "ayush arora"), or null if no sender is named.
-after, before: a date range as YYYY-MM-DD if the question names one ("last week", "in September"), else null.
-listAll: true if the user wants every matching email (all, every, list, summarize, how many), not a single fact.`;
+after, before: a date range as YYYY-MM-DD if the question names one ("last week", "in September", "this week", "tomorrow", "in the next 3 days"), else null.
+listAll: true if the user wants every matching email (all, every, list, summarize, how many), not a single fact.
+deadlines: true if the user asks what is due or coming up as a list (deadlines, assignments, bills, events, "what's due", "anything due this week?"); false for one named thing, such as "when is my DBMS assignment due?".`;
 
 // Created on first use, after dotenv has loaded GROQ_API_KEY.
 const models = new Map();
@@ -104,12 +106,31 @@ export async function answerQuestion(user, question, history = []) {
   if (isDay(understood.after)) filters.after = new Date(`${understood.after}T00:00:00+05:30`);
   if (isDay(understood.before)) filters.before = new Date(`${understood.before}T23:59:59+05:30`);
 
-  // "All emails from X" lists them; otherwise the most relevant chunks.
+  // "What's due" lists the emails with a date in the range; "all emails from
+  // X" lists them; otherwise the most relevant chunks.
   const listing = understood.listAll && Object.keys(filters).length > 0;
-  const chunks = listing ? await listMatching(user._id, filters) : await retrieve(user._id, standalone, { filters });
+  let chunks;
+  let note = "";
+  if (understood.deadlines) {
+    chunks = await listDue(user._id, filters);
+    if (chunks.length === 0) return notFound("Nothing in your inbox is due then, as far as Mailmind can tell.");
+    // The date, so "in the next 3 days" can be applied to the sources' dates.
+    const today = new Date().toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    note = `Today is ${today} (India). The sources are every email with a deadline or event in the next two weeks, or the range asked, soonest first. Each starts with the date Mailmind read in it. Apply any time range in the question to those dates. If the question names a kind of thing, include only that kind (assignments means coursework, projects and submissions); otherwise include every one, bills and registrations too, in date order.\n`;
+  } else if (listing) {
+    chunks = await listMatching(user._id, filters);
+    note = "The sources are all the matching emails, newest first (up to 15).\n";
+  } else {
+    chunks = await retrieve(user._id, standalone, { filters });
+  }
   if (chunks.length === 0) return notFound();
 
-  const note = listing ? "The sources are all the matching emails, newest first (up to 15).\n" : "";
   const reply = await ask(answerSchema, "medium", [
     ["system", SYSTEM_PROMPT],
     ["human", `${note}Sources:\n${formatSources(chunks)}\n\nQuestion: ${standalone}`],
