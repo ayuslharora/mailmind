@@ -14,7 +14,9 @@
     "eval-classifier": "node scripts/eval-classifier.js",
     "label-threads": "node scripts/label-threads.js",
     "eval-privacy": "node scripts/eval-privacy.js",
-    "create-search-indexes": "node scripts/create-search-indexes.js"
+    "create-search-indexes": "node scripts/create-search-indexes.js",
+    "seed-demo": "node scripts/seed-demo.js",
+    "export-typed": "node scripts/export-typed.js"
   },
   "dependencies": {
     "@langchain/core": "^1.2.17",

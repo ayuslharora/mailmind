@@ -13,6 +13,7 @@ import todayRoutes from "./routes/today.routes.js";
 import threadRoutes from "./routes/thread.routes.js";
 import askRoutes from "./routes/ask.routes.js";
 import digestRoutes from "./routes/digest.routes.js";
+import demoRoutes from "./routes/demo.routes.js";
 import errorMiddleware from "./middlewares/error.middleware.js";
 import { apiLimiter } from "./middlewares/rateLimit.middleware.js";
 
@@ -82,6 +83,7 @@ app.use("/api/today", todayRoutes);
 app.use("/api/threads", threadRoutes);
 app.use("/api/ask", askRoutes);
 app.use("/api/digest", digestRoutes);
+app.use("/api/demo", demoRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });

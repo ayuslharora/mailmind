@@ -25,3 +25,6 @@ chat-privacy-check*.txt
 
 # Classifier comparison results (thread IDs and answers)
 compare-results.json
+
+# Emails typed into the demo's "Try the redaction", with their originals
+eval/typed/

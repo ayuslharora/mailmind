@@ -15,6 +15,7 @@ import * as gptOss from "./classifier.js";
 import * as jev from "./classifierJev.js";
 
 const { DailyLimitError } = gptOss;
+import { demoEmails, isDemo } from "./demoInbox.js";
 import { getMessage } from "./gmail.js";
 import { indexMessages } from "./indexMessages.js";
 import { stopRequested, SyncStopped, throwIfStopped } from "./stopSync.js";
@@ -63,15 +64,26 @@ export async function classifyWithBestModel(state) {
   return { answers: await gptOss.classifyState(state), source: gptOss.SOURCE };
 }
 
+// Reads an original email again. The demo inbox has no Gmail behind it: its
+// originals are the fake emails in the repo.
+function originalsOf(user) {
+  if (isDemo(user)) {
+    const emails = new Map(demoEmails().map((email) => [email.id, email]));
+    return async (id) => emails.get(id);
+  }
+  const auth = gmailAuthFor(user);
+  return (id) => getMessage(auth, id);
+}
+
 // The classifier thinks it is a security email but the rules did not catch a
 // secret, so the stored copy is light. The raw text is not kept, so the
 // messages are read from Gmail again and redacted strictly.
 async function storeStrictly(userId, threadId) {
   const light = await Message.find({ userId, threadId, strict: false });
   if (light.length === 0) return;
-  const auth = gmailAuthFor(await User.findById(userId));
+  const readOriginal = originalsOf(await User.findById(userId));
   for (const message of light) {
-    const email = await getMessage(auth, message.gmailId);
+    const email = await readOriginal(message.gmailId);
     await Message.updateOne({ _id: message._id }, { $set: toStoredMessage(userId, email, { strict: true }) });
   }
   // Replace the chunks made from the light copy.

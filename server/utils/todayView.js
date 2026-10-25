@@ -16,10 +16,21 @@ const gmailLink = (email, threadId) =>
 // how urgent the classifier first judged them, then to the newest.
 const byPriority = (a, b) => b.urgency - a.urgency || b.firstUrgency - a.firstUrgency || b.date - a.date;
 
+// A demo visitor's own change hides a thread they marked done, or snoozed
+// until later.
+const hiddenByVisitor = (own, now) => own?.state === "done" || (own?.state === "snoozed" && own.snoozeUntil > now);
+
+// The visitor's correction wins over the stored one, field by field.
+const labelWith = (label, own) =>
+  own ? { category: own.category ?? label?.category, needsAction: own.needsAction ?? label?.needsAction } : label;
+
 // The Today view for one user: every open, classified thread in one section.
 // Threads that need nothing go in "other", newest first, so the latest email
-// can always be found.
-export async function buildToday(user, now = new Date()) {
+// can always be found. changes: a demo visitor's own changes, kept in their
+// browser and applied here without being saved:
+// { threads: { [threadId]: { state, snoozeUntil, category, needsAction } },
+//   senders: { [address]: category } }.
+export async function buildToday(user, now = new Date(), changes = {}) {
   const userId = user._id;
 
   // Done threads are hidden; snoozed ones come back when the snooze ends.
@@ -28,7 +39,10 @@ export async function buildToday(user, now = new Date()) {
     status: "classified",
     $or: [{ state: { $in: ["open", null] } }, { state: "snoozed", snoozeUntil: { $lte: now } }],
   }).sort({ lastMessageAt: -1 });
-  const senderRules = new Map((await SenderRule.find({ userId })).map((r) => [r.sender, r.category]));
+  const senderRules = new Map([
+    ...(await SenderRule.find({ userId })).map((r) => [r.sender, r.category]),
+    ...Object.entries(changes.senders ?? {}),
+  ]);
   const latest = await Message.find({ userId, gmailId: { $in: threads.map((t) => t.latestMessageId) } });
   const messageById = new Map(latest.map((m) => [m.gmailId, m]));
 
@@ -36,15 +50,17 @@ export async function buildToday(user, now = new Date()) {
 
   for (const thread of threads) {
     const message = messageById.get(thread.latestMessageId);
-    if (!message) continue;
+    const own = changes.threads?.[thread.threadId];
+    if (!message || hiddenByVisitor(own, now)) continue;
     const c = thread.classification;
+    const sender = senderAddress(message.from);
     const live = signals(
       {
         classification: c,
         dueAt: thread.dueAt,
         receivedAt: message.date,
-        label: thread.userLabel,
-        senderCategory: senderRules.get(senderAddress(message.from)),
+        label: labelWith(thread.userLabel, own),
+        senderCategory: senderRules.get(sender),
       },
       now,
     );
@@ -54,6 +70,9 @@ export async function buildToday(user, now = new Date()) {
       subject: message.subject,
       firstLine: firstLine(message.body),
       from: senderName(message.from),
+      // For "apply to everyone from this sender" in the demo, which is
+      // saved in the visitor's browser.
+      sender,
       fromMe: message.fromMe,
       date: message.date,
       ...live,

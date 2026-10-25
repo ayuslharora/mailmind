@@ -1,8 +1,9 @@
 import crypto from "crypto";
 
 // AES-256-GCM with the key in ENCRYPTION_KEY (32 random bytes, base64).
-// Used only for credentials: the Gmail refresh token.
-// Email text is stored redacted but not encrypted, so it can be searched.
+// Used for the Gmail refresh token, and for the originals of emails typed
+// into the demo's "Try the redaction" (kept for review, models/typedEmail.model.js).
+// Gmail email text is stored redacted but not encrypted, so it can be searched.
 const ALGORITHM = "aes-256-gcm";
 
 const key = () => Buffer.from(process.env.ENCRYPTION_KEY, "base64");

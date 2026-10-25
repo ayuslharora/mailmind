@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema(
       lastError: String,
     },
 
+    // The demo account only (utils/demo.js): the day, in India, its inbox was
+    // last moved to.
+    demoDay: String,
+
     // Today's briefing, kept so reopening the tab costs no AI call. Made
     // again when the day changes or the items in it change.
     digest: {

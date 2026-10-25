@@ -14,6 +14,28 @@ export const aiLimiter = rateLimit({
   message: tooMany,
 });
 
+// The same for the demo, where every visitor shares one account: counted per
+// IP address instead.
+export const demoAiLimiter = rateLimit({
+  windowMs: MINUTE_MS,
+  limit: 10,
+  keyGenerator: (req) => ipKeyGenerator(req.ip),
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: tooMany,
+});
+
+// The demo's "Try the redaction" saves what it is sent, so a visitor cannot
+// fill the database. Counted per IP address.
+export const typedEmailLimiter = rateLimit({
+  windowMs: MINUTE_MS,
+  limit: 10,
+  keyGenerator: (req) => ipKeyGenerator(req.ip),
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: tooMany,
+});
+
 // "Sync now": new mail is classified by AI, so a few times a minute is plenty.
 export const syncLimiter = rateLimit({
   windowMs: MINUTE_MS,
