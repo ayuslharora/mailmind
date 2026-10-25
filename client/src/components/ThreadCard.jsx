@@ -22,19 +22,32 @@ function dueLabel(item) {
   return item.dateKind === 'event' ? `Event ${when}` : `Due ${when}`
 }
 
+// A menu closes as soon as a choice is made: the change can take a moment to
+// show (the demo reloads the list from the server), and an open menu looked
+// as if the click had not worked.
+const closeMenu = (e) => {
+  e.currentTarget.closest('details').open = false
+}
+
 function SnoozeMenu({ onSnooze }) {
   const [date, setDate] = useState('')
   return (
     <details className="relative">
       <summary className={`${button} cursor-pointer list-none`}>Snooze</summary>
       <div className={menu}>
-        <button type="button" className="block w-full text-left hover:underline" onClick={() => onSnooze(nineAmIst(1))}>
+        <button type="button" className="block w-full text-left hover:underline" onClick={(e) => {
+            closeMenu(e)
+            onSnooze(nineAmIst(1))
+          }}>
           Tomorrow, 9 am
         </button>
         <button
           type="button"
           className="block w-full text-left hover:underline"
-          onClick={() => onSnooze(nineAmIst(daysToMonday()))}
+          onClick={(e) => {
+            closeMenu(e)
+            onSnooze(nineAmIst(daysToMonday()))
+          }}
         >
           Next Monday, 9 am
         </button>
@@ -51,7 +64,10 @@ function SnoozeMenu({ onSnooze }) {
               type="button"
               disabled={!date}
               className={`${button} disabled:opacity-50`}
-              onClick={() => onSnooze(new Date(`${date}T09:00:00+05:30`))}
+              onClick={(e) => {
+                closeMenu(e)
+                onSnooze(new Date(`${date}T09:00:00+05:30`))
+              }}
             >
               Set
             </button>
@@ -96,12 +112,13 @@ function FixMenu({ item, onFix }) {
         <button
           type="button"
           className={button}
-          onClick={() =>
+          onClick={(e) => {
+            closeMenu(e)
             onFix({
               ...(category !== item.category && { category, applyToSender }),
               ...(needsAction !== item.needsAction && { needsAction }),
             })
-          }
+          }}
         >
           Save
         </button>
@@ -126,7 +143,10 @@ function ThreadCard({ item, onAction, rank, section }) {
   // The demo's fake emails are not in any Gmail.
   const demo = useDemo()
   return (
-    <li className="flex gap-4 rounded-sm border border-rule bg-paper p-4 transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgb(0_0_0/0.35)]">
+    // A card with an open menu sits above the next card: the hover lift makes
+    // the card its own layer, and the next card's rotated date tag covered the
+    // menu, so a click on Save landed on the tag.
+    <li className="relative flex gap-4 rounded-sm border border-rule bg-paper p-4 transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgb(0_0_0/0.35)] has-[details[open]]:z-20">
       {rank && (
         <span
           aria-label={`Number ${rank}`}
