@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { pagePath, useDemo } from '../utils/demo'
 import { calendarLink, daysToMonday, formatDue, formatReceived, nineAmIst } from '../utils/format'
 import Redacted from './Redacted'
 
@@ -122,6 +123,8 @@ const SECTION_BADGES = {
 // Needs action, in priority order). section: its section, as a badge.
 function ThreadCard({ item, onAction, rank, section }) {
   const badge = SECTION_BADGES[section]
+  // The demo's fake emails are not in any Gmail.
+  const demo = useDemo()
   return (
     <li className="flex gap-4 rounded-sm border border-rule bg-paper p-4 transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-16px_rgb(0_0_0/0.35)]">
       {rank && (
@@ -134,7 +137,7 @@ function ThreadCard({ item, onAction, rank, section }) {
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-3">
-          <Link to={`/email/${item.threadId}`} className="text-[17px] font-bold leading-snug hover:underline">
+          <Link to={pagePath(demo, `/email/${item.threadId}`)} className="text-[17px] font-bold leading-snug hover:underline">
             {item.subject || '(no subject)'}
           </Link>
           <span className="shrink-0 font-mono text-xs text-grey">{formatReceived(item.date)}</span>
@@ -169,13 +172,15 @@ function ThreadCard({ item, onAction, rank, section }) {
             onFix={(changes) => Object.keys(changes).length && onAction(item, changes, 'Thanks — corrected')}
           />
           {item.dueAt && !item.missed && (
-            <a href={calendarLink(item)} target="_blank" rel="noreferrer" className={button}>
+            <a href={calendarLink(demo ? { ...item, gmailUrl: null } : item)} target="_blank" rel="noreferrer" className={button}>
               Add to Calendar
             </a>
           )}
-          <a href={item.gmailUrl} target="_blank" rel="noreferrer" className="ml-auto font-semibold underline underline-offset-2">
-            Open in Gmail
-          </a>
+          {!demo && (
+            <a href={item.gmailUrl} target="_blank" rel="noreferrer" className="ml-auto font-semibold underline underline-offset-2">
+              Open in Gmail
+            </a>
+          )}
         </div>
       </div>
     </li>

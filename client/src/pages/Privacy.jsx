@@ -26,7 +26,7 @@ function Privacy() {
         </Link>
       </header>
       <h1 className="mt-12 text-5xl font-black uppercase leading-none condensed sm:text-6xl">Privacy policy</h1>
-      <p className="mt-4 font-mono text-xs uppercase tracking-[0.14em] text-grey">Effective 9 October 2026</p>
+      <p className="mt-4 font-mono text-xs uppercase tracking-[0.14em] text-grey">Effective 25 October 2026</p>
 
       <p className="mt-6 text-ink/80">
         Mailmind is a student project that sorts your Gmail inbox and answers questions about it. It is invite-only. This
@@ -48,7 +48,7 @@ function Privacy() {
       <Section title="Secrets are removed before anything is stored">
         <p>
           On our server, before an email is saved or sent to any AI service, Mailmind replaces one-time passwords, card
-          numbers, CVVs, PINs, Aadhaar and PAN numbers, bank account numbers, passwords, phone numbers, IP addresses and
+          numbers, CVVs, PINs, Aadhaar and PAN numbers, bank account numbers, passwords, phone numbers, UPI IDs, card expiry dates, IP addresses and
           sign-in or reset links with placeholders such as <Redacted text="[OTP]" /> or <Redacted text="[CARD]" />. Your original, unredacted emails are never
           stored. This removal is automatic and pattern-based, so unusual formats can occasionally be missed.
         </p>
@@ -63,6 +63,19 @@ function Privacy() {
           <li>How the AI sorted each email, and any corrections you make.</li>
         </ul>
         <p>Data is stored in MongoDB Atlas and kept until you delete it.</p>
+      </Section>
+
+      <Section title="The demo">
+        <p>
+          The demo at <Link to="/demo" className="underline underline-offset-2">/demo</Link> needs no sign-in and shows
+          fake emails. Changes you make there are saved only in your browser.
+        </p>
+        <p>
+          An email you write in the demo&rsquo;s &ldquo;Try the redaction&rdquo; is the one exception to &ldquo;originals
+          are never stored&rdquo;: its original text is saved, encrypted (AES-256-GCM), together with the redacted copy,
+          so the author can study what the rules miss. It is not linked to you, never sent to an AI service, and deleted
+          after 90 days. Please use made-up numbers there.
+        </p>
       </Section>
 
       <Section title="Who receives your data">

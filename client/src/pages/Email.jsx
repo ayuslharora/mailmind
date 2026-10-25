@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import axiosInstance from '../axiosCalls/axios'
 import AppBar from '../components/AppBar'
 import Redacted from '../components/Redacted'
+import { apiPath, loadChanges, pagePath, useDemo } from '../utils/demo'
 import { formatReceived } from '../utils/format'
 
 // "What the AI saw": the exact context the classifier received, its answer,
@@ -48,17 +49,18 @@ function Email() {
   const { threadId } = useParams()
   const [email, setEmail] = useState(null)
   const [error, setError] = useState(null)
+  const demo = useDemo()
 
   useEffect(() => {
     let active = true
     axiosInstance
-      .get(`/threads/${threadId}`)
+      .get(apiPath(demo, `/threads/${threadId}`))
       .then(({ data }) => active && setEmail(data))
       .catch((err) => active && setError(err.response?.data?.message ?? 'Could not load this email.'))
     return () => {
       active = false
     }
-  }, [threadId])
+  }, [threadId, demo])
 
   if (error)
     return (
@@ -76,6 +78,9 @@ function Email() {
     )
 
   const { sentToClassifier: sent, answer } = email
+  // In the demo, the visitor's correction is kept in their browser.
+  const own = demo ? loadChanges().threads[threadId] : null
+  const userLabel = own?.category || own?.needsAction !== undefined ? own : email.userLabel
   const categories = answer
     ? Object.entries(answer.categoryProbs)
         .filter(([, p]) => p >= 0.01)
@@ -86,7 +91,7 @@ function Email() {
     <>
       <AppBar />
       <main className="mx-auto max-w-3xl px-4 pb-24 pt-8">
-        <Link to="/today" className="text-sm font-semibold underline underline-offset-2">
+        <Link to={pagePath(demo, '/today')} className="text-sm font-semibold underline underline-offset-2">
           ← Today
         </Link>
         <h1 className="mt-4 text-3xl font-bold leading-tight text-balance">{email.messages[0]?.subject || '(no subject)'}</h1>
@@ -128,15 +133,15 @@ function Email() {
                 <p className="text-sm text-grey">{answer.urgency?.toFixed(1)} of 4. Urgent starts at 3.</p>
               </div>
             </div>
-            {(answer.promoCap || email.userLabel) && (
+            {(answer.promoCap || userLabel) && (
               <ul className="mt-4 space-y-1 text-sm">
                 {answer.promoCap && <li>Promotion: urgency capped (Gmail's headers agree it is a promotion)</li>}
-                {email.userLabel && (
+                {userLabel && (
                   <li>
                     Your correction:{' '}
                     {[
-                      email.userLabel.category,
-                      email.userLabel.needsAction !== undefined && `needs action: ${email.userLabel.needsAction ? 'yes' : 'no'}`,
+                      userLabel.category,
+                      userLabel.needsAction !== undefined && `needs action: ${userLabel.needsAction ? 'yes' : 'no'}`,
                     ]
                       .filter(Boolean)
                       .join(', ')}
@@ -156,9 +161,11 @@ function Email() {
                 <span>
                   {m.from} · <span className="font-mono text-xs">{formatReceived(m.date)}</span> · {m.strict ? 'strict' : 'light'}
                 </span>
-                <a href={m.gmailUrl} target="_blank" rel="noreferrer" className="font-semibold underline underline-offset-2">
-                  Open original in Gmail
-                </a>
+                {!demo && (
+                  <a href={m.gmailUrl} target="_blank" rel="noreferrer" className="font-semibold underline underline-offset-2">
+                    Open original in Gmail
+                  </a>
+                )}
               </div>
               <p className="mt-3 text-xs">
                 <span className={`${label} mr-2`}>Hidden</span>

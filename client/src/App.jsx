@@ -6,6 +6,7 @@ import Landing from './pages/Landing'
 import Today from './pages/Today'
 import Ask from './pages/Ask'
 import Email from './pages/Email'
+import Redact from './pages/Redact'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 
@@ -46,6 +47,11 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* The demo: the same pages with a shared fake inbox, no sign-in. */}
+          <Route path="/demo" element={<Today />} />
+          <Route path="/demo/ask" element={<Ask />} />
+          <Route path="/demo/email/:threadId" element={<Email />} />
+          <Route path="/demo/redact" element={<Redact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="*" element={<Navigate to="/" replace />} />

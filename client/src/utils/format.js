@@ -75,7 +75,7 @@ export function calendarLink(item) {
     action: 'TEMPLATE',
     text: item.subject || 'From Mailmind',
     dates,
-    details: `Open the email: ${item.gmailUrl}`,
+    details: item.gmailUrl ? `Open the email: ${item.gmailUrl}` : 'From the Mailmind demo',
   })
   return `https://calendar.google.com/calendar/render?${params}`
 }

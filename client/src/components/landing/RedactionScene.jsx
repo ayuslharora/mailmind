@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { clamp, ease, easeInOut, reducedMotion, seeded, span, watchScroll } from './motion'
 
 // Scene 1: the email fills the screen; as you scroll, a numbered evidence
@@ -92,6 +93,9 @@ function Pitch({ className }) {
         <a className="signin" href="/api/auth/google">
           Sign in with Google
         </a>
+        <Link className="link" to="/demo">
+          Try the demo
+        </Link>
         <a className="link" href="#jev">
           See how it works
         </a>

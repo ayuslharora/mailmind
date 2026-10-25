@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import '../components/landing/landing.css'
 import DeleteScene from '../components/landing/DeleteScene'
 import Finale from '../components/landing/Finale'
@@ -15,7 +15,8 @@ const MapScene = lazy(() => import('../components/landing/MapScene'))
 const SIGN_IN_ERRORS = {
   failed: 'Sign-in did not finish. Please try again.',
   'gmail-access': 'Mailmind needs permission to read your Gmail. Please sign in again and tick the Gmail box.',
-  'not-invited': 'Mailmind is invite-only for now, and this Google account is not on the list. Nothing was saved.',
+  'not-invited':
+    'Mailmind is invite-only for now, and this Google account is not on the list. Nothing was saved. You can try the demo without signing in.',
 }
 
 // The landing page opens on police tape, then tells, in one scroll, what
@@ -35,10 +36,15 @@ function Landing() {
           <span className="mark" aria-hidden="true">M</span>
           Mailmind
         </div>
-        {/* A plain link, not axios: Google's sign-in page needs a full page visit. */}
-        <a className="signin" href="/api/auth/google">
-          Sign in with Google
-        </a>
+        <div className="bar-actions">
+          <Link className="demo-link" to="/demo">
+            Try the demo
+          </Link>
+          {/* A plain link, not axios: Google's sign-in page needs a full page visit. */}
+          <a className="signin" href="/api/auth/google">
+            Sign in with Google
+          </a>
+        </div>
       </header>
       {error && (
         <p role="alert" className="signin-error">

@@ -11,8 +11,11 @@ function Finale() {
         <a className="signin" href="/api/auth/google">
           Sign in with Google
         </a>
+        <Link className="link" to="/demo">
+          Try the demo, no sign-in
+        </Link>
       </div>
-      <p className="small">Invite-only for now. Read-only access to Gmail.</p>
+      <p className="small">Sign-in is invite-only for now, with read-only access to Gmail. The demo is a fake inbox anyone can open.</p>
       <footer>
         <Link to="/privacy">Privacy</Link>
         <Link to="/terms">Terms</Link>

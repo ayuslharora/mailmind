@@ -1,21 +1,24 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axiosInstance from '../axiosCalls/axios'
+import { apiPath, pagePath, useDemo } from '../utils/demo'
 
 // Minimal on purpose: the front end will be redesigned.
 function Digest() {
   const [digest, setDigest] = useState(null)
   const [error, setError] = useState(null)
+  const demo = useDemo()
 
   useEffect(() => {
     let active = true
     axiosInstance
-      .get('/digest')
+      .get(apiPath(demo, '/digest'))
       .then(({ data }) => active && setDigest(data))
       .catch((err) => active && setError(err.response?.data?.message ?? 'Could not load the digest.'))
     return () => {
       active = false
     }
-  }, [])
+  }, [demo])
 
   if (error) return <p className="mt-8 text-sm text-danger">{error}</p>
   if (!digest) return <p className="mt-8 text-grey">Writing your digest…</p>
@@ -35,9 +38,15 @@ function Digest() {
               </span>
               <span className="pt-1">
                 {point.text}{' '}
-                <a href={point.gmailUrl} target="_blank" rel="noreferrer" className="text-sm font-semibold text-grey underline underline-offset-2">
-                  Open
-                </a>
+                {demo ? (
+                  <Link to={pagePath(demo, `/email/${point.threadId}`)} className="text-sm font-semibold text-grey underline underline-offset-2">
+                    Open
+                  </Link>
+                ) : (
+                  <a href={point.gmailUrl} target="_blank" rel="noreferrer" className="text-sm font-semibold text-grey underline underline-offset-2">
+                    Open
+                  </a>
+                )}
               </span>
             </li>
           ))}

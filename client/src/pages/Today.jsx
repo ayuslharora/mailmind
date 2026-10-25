@@ -4,6 +4,7 @@ import AppBar from '../components/AppBar'
 import Loading from '../components/Loading'
 import Digest from '../components/Digest'
 import ThreadCard from '../components/ThreadCard'
+import { loadChanges, saveChange, useDemo } from '../utils/demo'
 import { formatAgo, formatDay } from '../utils/format'
 
 // While mail is being fetched or sorted, the page refreshes itself.
@@ -123,17 +124,23 @@ function Today() {
     return () => clearTimeout(timer)
   }, [notice])
 
+  const demo = useDemo()
   const busy = Boolean(status && (status.syncing || status.classifying || today?.sorting > 0))
 
   useEffect(() => {
     // Ignores replies that arrive after the page has moved on.
     let active = true
+    // The demo sends the visitor's own changes and has no Gmail sync.
+    const requests = () =>
+      demo
+        ? [axiosInstance.post('/demo/today', loadChanges())]
+        : [axiosInstance.get('/today'), axiosInstance.get('/sync/status')]
     const refresh = () =>
-      Promise.all([axiosInstance.get('/today'), axiosInstance.get('/sync/status')])
+      Promise.all(requests())
         .then(([todayRes, statusRes]) => {
           if (!active) return
           setToday(todayRes.data)
-          setStatus(statusRes.data)
+          setStatus(statusRes?.data ?? null)
           setError(null)
           setLoginNeeded(false)
         })
@@ -151,11 +158,15 @@ function Today() {
       active = false
       if (timer) clearInterval(timer)
     }
-  }, [busy, reloadKey])
+  }, [busy, reloadKey, demo])
+
+  // In the demo, a change is saved in this browser instead of on the server.
+  const save = (item, changes) =>
+    demo ? saveChange(item, changes) : axiosInstance.patch(`/threads/${item.threadId}`, changes)
 
   const act = async (item, changes, text) => {
     try {
-      await axiosInstance.patch(`/threads/${item.threadId}`, changes)
+      await save(item, changes)
       const hidden = changes.state === 'done' || changes.snoozeUntil
       setNotice({ text, threadId: hidden ? item.threadId : null })
       setReloadKey((k) => k + 1)
@@ -167,7 +178,7 @@ function Today() {
   const undo = async () => {
     const { threadId } = notice
     setNotice(null)
-    await axiosInstance.patch(`/threads/${threadId}`, { state: 'open' })
+    await save({ threadId }, { state: 'open' })
     setReloadKey((k) => k + 1)
   }
 

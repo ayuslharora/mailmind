@@ -56,7 +56,17 @@
     box-shadow: 0 8px 20px -10px rgba(237, 187, 0, .9), inset 0 -1px 0 rgba(0, 0, 0, .12); transition: transform .2s;
   }
   .signin:hover { transform: translateY(-1px) rotate(-1deg); }
-  .signin:focus-visible, .link:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .signin:focus-visible, .link:focus-visible, .demo-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .bar-actions { display: flex; align-items: center; gap: 18px; }
+  /* Plain text in the top bar, so the sign-in button stays the main action.
+     Takes the bar's colour, so it reads on the dark opening too. */
+  .demo-link { font: 600 15px/1 var(--font); color: inherit; text-decoration: underline; text-underline-offset: 4px; white-space: nowrap; }
+  /* Narrow phones: the mark without the name, so both links fit. */
+  @media (max-width: 480px) {
+    .bar-top .wordmark { font-size: 0; gap: 0; }
+    .bar-actions { gap: 14px; }
+    .bar-top .signin { font-size: 14px; padding: 11px 13px; }
+  }
 
   /* The opening: night, two strips of live tape (TapeHero.jsx), the name. */
   .hero {

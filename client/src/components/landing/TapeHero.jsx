@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { clamp, reducedMotion } from './motion'
 
 // The opening: two strips of police tape are pulled across the screen and
@@ -271,6 +272,9 @@ function TapeHero({ onVisible }) {
           <a className="signin" href="/api/auth/google">
             Sign in with Google
           </a>
+          <Link className="ghost" to="/demo">
+            Try the demo
+          </Link>
           <a className="ghost" href="#story">
             See how it works
           </a>

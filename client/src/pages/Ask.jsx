@@ -2,6 +2,7 @@ import { useState } from 'react'
 import axiosInstance from '../axiosCalls/axios'
 import AppBar from '../components/AppBar'
 import Redacted from '../components/Redacted'
+import { apiPath, useDemo } from '../utils/demo'
 import { formatReceived } from '../utils/format'
 
 function Ask() {
@@ -9,6 +10,7 @@ function Ask() {
   const [question, setQuestion] = useState('')
   const [asking, setAsking] = useState(false)
   const [error, setError] = useState(null)
+  const demo = useDemo()
 
   const ask = async (e) => {
     e.preventDefault()
@@ -21,7 +23,7 @@ function Ask() {
       { role: 'assistant', text: t.answer },
     ])
     try {
-      const { data } = await axiosInstance.post('/ask', {
+      const { data } = await axiosInstance.post(apiPath(demo, '/ask'), {
         question: text,
         history,
       })
@@ -53,7 +55,7 @@ function Ask() {
                 <p className="max-w-[80%] rounded-sm bg-ink px-4 py-2.5 font-semibold text-paper">{turn.question}</p>
               </div>
               <div className="max-w-[85%] rounded-sm border border-rule px-4 py-3">
-                <p className="text-lg leading-relaxed">
+                <p className="whitespace-pre-line text-lg leading-relaxed">
                   <Redacted text={turn.answer} />
                 </p>
                 {turn.citations.length > 0 && (
@@ -69,14 +71,19 @@ function Ask() {
                             {n + 1}
                           </span>
                           <span>
-                            <a
-                              href={c.gmailUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="font-semibold underline underline-offset-2"
-                            >
-                              {c.subject || '(no subject)'}
-                            </a>{' '}
+                            {/* The demo's fake emails are not in any Gmail. */}
+                            {demo ? (
+                              <span className="font-semibold">{c.subject || '(no subject)'}</span>
+                            ) : (
+                              <a
+                                href={c.gmailUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-semibold underline underline-offset-2"
+                              >
+                                {c.subject || '(no subject)'}
+                              </a>
+                            )}{' '}
                             <span className="text-grey">
                               · {c.from} · {formatReceived(c.date)}
                             </span>
@@ -107,7 +114,7 @@ function Ask() {
             <input
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g. When is my Kaggle deadline?"
+              placeholder={demo ? 'e.g. When is my DBMS assignment due?' : 'e.g. When is my Kaggle deadline?'}
               maxLength={500}
               aria-label="Your question"
               className="relative w-full rounded-sm border border-ink bg-paper px-4 py-3 text-[17px] outline-none placeholder:text-grey focus:border-2"

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import axiosInstance from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
+import { pagePath, resetChanges, useDemo } from '../utils/demo'
 import { isDark, setTheme } from '../utils/theme'
 import Brand from './Brand'
 
@@ -9,10 +10,41 @@ const NAV = [
   ['/today', 'Today'],
   ['/ask', 'Ask'],
 ]
+// The demo also lets a visitor type an email and watch it being redacted.
+const DEMO_NAV = [...NAV, ['/redact', 'Redact']]
 
-// The top of every signed-in page: the mark, where you can go, your account.
+const menuBox =
+  'absolute right-0 z-30 mt-2 w-64 space-y-3 rounded-sm border border-ink bg-paper p-4 text-sm shadow-[5px_5px_0_var(--color-ink)]'
+const menuButton = 'cursor-pointer list-none rounded-sm border border-rule px-3 py-1.5 text-sm font-medium hover:border-ink'
+
+// The demo's menu in place of the account: no account, and the visitor's
+// changes live in this browser.
+function DemoMenu() {
+  const reset = () => {
+    resetChanges()
+    window.location.reload()
+  }
+  return (
+    <details className="relative -ml-2 sm:-ml-3">
+      <summary className={menuButton}>Demo</summary>
+      <div className={menuBox}>
+        <p className="text-grey">Fake emails of a student, Aarav. Your changes are saved only in this browser.</p>
+        <button type="button" onClick={reset} className="block font-semibold underline underline-offset-2">
+          Reset my changes
+        </button>
+        <Link to="/" className="block font-semibold underline underline-offset-2">
+          Exit demo
+        </Link>
+      </div>
+    </details>
+  )
+}
+
+// The top of every signed-in page (and of the demo): the mark, where you can
+// go, your account.
 function AppBar() {
   const { user, logout } = useAuth()
+  const demo = useDemo()
   const [dark, setDark] = useState(isDark)
 
   const switchTheme = () => {
@@ -36,12 +68,13 @@ function AppBar() {
   return (
     <header className="sticky top-0 z-20 border-b border-rule bg-paper/95 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3 sm:gap-6">
-        <Brand to="/today" compact />
-        <nav className="flex gap-4 text-[15px] sm:gap-5 font-semibold">
-          {NAV.map(([to, label]) => (
+        <Brand to={pagePath(demo, '/today')} compact />
+        <nav className="flex gap-3 text-[15px] font-semibold sm:gap-5">
+          {(demo ? DEMO_NAV : NAV).map(([to, label]) => (
             <NavLink
               key={to}
-              to={to}
+              to={pagePath(demo, to)}
+              end
               className={({ isActive }) => `relative py-1 ${isActive ? 'text-ink' : 'text-grey hover:text-ink'}`}
             >
               {({ isActive }) => (
@@ -80,25 +113,35 @@ function AppBar() {
             )}
           </svg>
         </button>
-        <details className="relative -ml-2 sm:-ml-3">
-          <summary className="cursor-pointer list-none rounded-sm border border-rule px-3 py-1.5 text-sm font-medium hover:border-ink">
-            Account
-          </summary>
-          <div className="absolute right-0 z-30 mt-2 w-64 space-y-3 rounded-sm border border-ink bg-paper p-4 text-sm shadow-[5px_5px_0_var(--color-ink)]">
-            <p className="truncate text-grey">{user.email}</p>
-            <button type="button" onClick={logout} className="block font-semibold underline underline-offset-2">
-              Log out
-            </button>
-            <button
-              type="button"
-              onClick={deleteEverything}
-              className="block font-semibold text-danger underline underline-offset-2"
-            >
-              Delete all my data
-            </button>
-          </div>
-        </details>
+        {demo ? (
+          <DemoMenu />
+        ) : (
+          <details className="relative -ml-2 sm:-ml-3">
+            <summary className={menuButton}>Account</summary>
+            <div className={menuBox}>
+              <p className="truncate text-grey">{user.email}</p>
+              <button type="button" onClick={logout} className="block font-semibold underline underline-offset-2">
+                Log out
+              </button>
+              <button
+                type="button"
+                onClick={deleteEverything}
+                className="block font-semibold text-danger underline underline-offset-2"
+              >
+                Delete all my data
+              </button>
+            </div>
+          </details>
+        )}
       </div>
+      {demo && (
+        <p className="flex overflow-hidden border-t border-rule text-sm">
+          <span aria-hidden="true" className="hazard w-2.5 shrink-0" />
+          <span className="mx-auto w-full max-w-3xl px-4 py-2">
+            <strong>Demo inbox:</strong> fake emails, no sign-in. Everything else is the real app.
+          </span>
+        </p>
+      )}
     </header>
   )
 }
