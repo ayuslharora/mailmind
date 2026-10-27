@@ -8,7 +8,11 @@ The design is in [`docs/PRD.md`](docs/PRD.md).
 
 ## Video
 
-A 3-minute walkthrough of Mailmind: [watch on Google Drive](https://drive.google.com/file/d/1w4Cj4KFzHMAw0l7fy-m_ugTL3rGgEy8B/view?usp=drivesdk).
+A 3-minute walkthrough of Mailmind:
+
+https://github.com/user-attachments/assets/0b8d8695-161f-4cb6-a608-2eca0e25bbbc
+
+In full quality: [watch on Google Drive](https://drive.google.com/file/d/1w4Cj4KFzHMAw0l7fy-m_ugTL3rGgEy8B/view?usp=drivesdk).
 
 ## Try it
 
