@@ -12,7 +12,6 @@ The final design is in `docs/PRD.md`. The classification design is covered in de
 | --- | --- | --- | --- |
 | V1 PRD | A "privacy-first inbox assistant": a privacy gate that blocked sensitive emails from the cloud, plus triage, a digest and RAG chat | The gate dominated the design. Sensitive emails (offer letters, bills, results) were blocked, so the assistant could not help with the emails that mattered most. Triage mostly duplicated Gmail's tabs. Success was measured by leak rate, not usefulness | Rewritten |
 | V2 PRD | A daily brief: Reply needed, Due soon, Waiting on; the gate *routes* email instead of dropping it | Better product, but still a single-user tool, and a public Gmail app needs Google's restricted-scope verification | Ideas kept: deadlines, urgency, done/snooze |
-| Alternatives | GitHub duplicate-issue finder; campus notice hub; exam-paper analyser | Rejected by the author: the goal is a tool used in daily life, and email is where important things get buried | Email assistant kept |
 | Final | **Mailmind:** reads the last month of Gmail, removes secrets before any AI sees the mail, sorts by urgency, collects deadlines and answers questions with links to the source emails | — | Chosen |
 
 **Constraints that shaped everything:** the end-term guidelines (deadline 27 October 2026; a deployed working app; 3–5 workflows built in depth; real git history; README; demo video; evaluators must get in from an incognito window without extra permissions) and a requirement that the project cost nothing to run.
