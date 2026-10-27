@@ -1,12 +1,14 @@
 # Mailmind
 
+[![Tests](https://github.com/ayuslharora/mailmind/actions/workflows/test.yml/badge.svg)](https://github.com/ayuslharora/mailmind/actions/workflows/test.yml)
+
 A privacy-first Gmail assistant. It removes secrets (OTPs, card numbers, Aadhaar/PAN, password-reset links) on the server before any AI model sees the mail, then shows what is urgent, collects deadlines, and answers questions about the inbox with links to the exact Gmail messages.
 
 The design is in [`docs/PRD.md`](docs/PRD.md).
 
-## Demo mode
+## Try it
 
-Sign-in is invite-only, so [mailmind.ayuslh.in/demo](https://mailmind.ayuslh.in/demo) opens a demo inbox with no sign-in: a week of fake emails of a student, Aarav (the 63 threads of `eval/classifier/cases.json`). Everything else is the real app:
+Anyone can sign in with their own Gmail at [mailmind.ayuslh.in](https://mailmind.ayuslh.in). Google has not verified the app yet, so it shows a warning first ("Advanced → Go to Mailmind" continues), and at most 100 accounts can ever sign in. To try it without connecting Gmail, [mailmind.ayuslh.in/demo](https://mailmind.ayuslh.in/demo) opens a demo inbox with no sign-in: a week of fake emails of a student, Aarav (the 63 threads of `eval/classifier/cases.json`). Everything else is the real app:
 
 - The emails went through the real pipeline once (redaction, the Jev classifier, embeddings), so Today, "What the AI saw", the Digest and Ask show real results, not hard-coded ones.
 - Every visitor sees the same inbox. Done, snooze and "Not right?" corrections are saved in the visitor's browser and sent with each request; the server applies them without saving, so nobody changes the inbox for the next visitor. "Reset my changes" clears them.
