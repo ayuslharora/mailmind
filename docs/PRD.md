@@ -162,7 +162,7 @@ Cloudflare Worker (cron) ──► /health every 10 minutes (keeps Render awake)
 - **No secrets in Git:** `.env` is ignored and has never been committed; `.env.example` documents the variables.
 - **Delete all my data:** removes every message, conversation, search chunk and rule, revokes Mailmind's Gmail access at Google, and deletes the account (tested).
 - **Rate limits and headers:** AI features (10 a minute) and Sync now (3 a minute) are limited per user; sign-in (20 a minute) and every API request (120 a minute) per IP address; `helmet` sets security headers.
-- **Invite-only:** only the Gmail addresses in `ALLOWED_EMAILS` can sign in. Anyone else is turned away before anything is saved, and the Gmail access they just granted is given back. Removing an address cuts that account off on its next request and stops its sync.
+- **Who can sign in:** `ALLOWED_EMAILS=*` (the live site) lets any Gmail account in; a comma-separated list makes it invite-only. Anyone not on the list is turned away before anything is saved, and the Gmail access they just granted is given back. Removing an address cuts that account off on its next request and stops its sync.
 - **Known limit:** the words of an email (names, personal content) can reach the AI services. Mailmind protects secrets, not every private detail, and says so.
 
 ## 15. Error handling
