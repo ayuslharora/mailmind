@@ -6,6 +6,10 @@ A privacy-first Gmail assistant. It removes secrets (OTPs, card numbers, Aadhaar
 
 The design is in [`docs/PRD.md`](docs/PRD.md).
 
+## Video
+
+A 3-minute walkthrough of Mailmind: [watch on Google Drive](https://drive.google.com/file/d/1w4Cj4KFzHMAw0l7fy-m_ugTL3rGgEy8B/view?usp=drivesdk).
+
 ## Try it
 
 Anyone can sign in with their own Gmail at [mailmind.ayuslh.in](https://mailmind.ayuslh.in). Google has not verified the app yet, so it shows a warning first ("Advanced → Go to Mailmind" continues), and at most 100 accounts can ever sign in. To try it without connecting Gmail, [mailmind.ayuslh.in/demo](https://mailmind.ayuslh.in/demo) opens a demo inbox with no sign-in: a week of fake emails of a student, Aarav (the 63 threads of `eval/classifier/cases.json`). Everything else is the real app:
