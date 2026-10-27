@@ -8,7 +8,7 @@ The design is in [`docs/PRD.md`](docs/PRD.md).
 
 ## Video
 
-A 3-minute walkthrough of Mailmind:
+A 3-minute walkthrough of Mailmind. It has a voice-over: GitHub starts videos muted, so click the speaker icon to turn the sound on.
 
 https://github.com/user-attachments/assets/0b8d8695-161f-4cb6-a608-2eca0e25bbbc
 
