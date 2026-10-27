@@ -28,3 +28,6 @@ compare-results.json
 
 # Emails typed into the demo's "Try the redaction", with their originals
 eval/typed/
+
+# The explainer video project (code, recordings, voice and renders), kept out of the repo
+video/
